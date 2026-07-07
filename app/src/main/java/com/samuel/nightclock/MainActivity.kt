@@ -58,6 +58,11 @@ import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
+import android.media.AudioManager
+import android.media.ToneGenerator
+import android.os.Handler
+import android.os.Looper
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -230,8 +235,8 @@ fun NightClockApp() {
                         .padding(bottom = 28.dp),
                     onStartTimer = { minutes ->
                         timerFinished = false
-                        timerSeconds = minutes * 60
-                        totalTimerSeconds = minutes * 60
+                        timerSeconds = 5
+                        totalTimerSeconds = 5
                         isTimerRunning = true
                         showTimerControls = false
                     }
@@ -349,6 +354,7 @@ fun TimerDoneScreen(
 ) {
     LaunchedEffect(Unit) {
         vibrateTimerFinished(context)
+        playTimerFinishedSound()
     }
 
     Box(
@@ -562,4 +568,20 @@ fun vibrateTimerFinished(context: Context) {
             -1
         )
     }
+}
+
+fun playTimerFinishedSound() {
+    val toneGenerator = ToneGenerator(
+        AudioManager.STREAM_ALARM,
+        80
+    )
+
+    toneGenerator.startTone(
+        ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD,
+        1200
+    )
+
+    Handler(Looper.getMainLooper()).postDelayed({
+        toneGenerator.release()
+    }, 1400)
 }
