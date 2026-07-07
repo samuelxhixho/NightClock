@@ -1,15 +1,29 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+# Android Studio / Gradle
+.gradle/
+build/
+*/build/
 local.properties
+.idea/
+*.iml
+
+# Kotlin / Java
+*.class
+
+# Logs
+*.log
+
+# APK / build outputs
+*.apk
+*.aab
+outputs/
+
+# Signing keys - DO NOT PUSH
+*.jks
+*.keystore
+
+# Secrets
+.env
+.env.*
+secrets.properties
+serviceAccountKey.json
+google-services.json
