@@ -64,6 +64,23 @@ import android.os.Handler
 import android.os.Looper
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Switch
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+
+
+
+val Context.settingsDataStore by preferencesDataStore(name = "night_clock_settings")
+
+object SettingsKeys {
+    val SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
+    val VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
+    val BATTERY_WARNING_ENABLED = booleanPreferencesKey("battery_warning_enabled")
+}
 
 
 class MainActivity : ComponentActivity() {
@@ -91,6 +108,26 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun NightClockApp() {
     val context = LocalContext.current
+
+    val scope = rememberCoroutineScope()
+
+    val soundEnabled by context.settingsDataStore.data
+        .map { preferences ->
+            preferences[SettingsKeys.SOUND_ENABLED] ?: true
+        }
+        .collectAsState(initial = true)
+
+    val vibrationEnabled by context.settingsDataStore.data
+        .map { preferences ->
+            preferences[SettingsKeys.VIBRATION_ENABLED] ?: true
+        }
+        .collectAsState(initial = true)
+
+    val batteryWarningEnabled by context.settingsDataStore.data
+        .map { preferences ->
+            preferences[SettingsKeys.BATTERY_WARNING_ENABLED] ?: true
+        }
+        .collectAsState(initial = true)
 
     val powerManager = remember {
         context.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -122,18 +159,6 @@ fun NightClockApp() {
 
     var showTimerControls by remember {
         mutableStateOf(false)
-    }
-
-    var soundEnabled by remember {
-        mutableStateOf(true)
-    }
-
-    var vibrationEnabled by remember {
-        mutableStateOf(true)
-    }
-
-    var batteryWarningEnabled by remember {
-        mutableStateOf(true)
     }
 
     var showSettings by remember {
@@ -289,14 +314,26 @@ fun NightClockApp() {
                 soundEnabled = soundEnabled,
                 vibrationEnabled = vibrationEnabled,
                 batteryWarningEnabled = batteryWarningEnabled,
-                onSoundChange = {
-                    soundEnabled = it
+                onSoundChange = { enabled ->
+                    scope.launch {
+                        context.settingsDataStore.edit { preferences ->
+                            preferences[SettingsKeys.SOUND_ENABLED] = enabled
+                        }
+                    }
                 },
-                onVibrationChange = {
-                    vibrationEnabled = it
+                onVibrationChange = { enabled ->
+                    scope.launch {
+                        context.settingsDataStore.edit { preferences ->
+                            preferences[SettingsKeys.VIBRATION_ENABLED] = enabled
+                        }
+                    }
                 },
-                onBatteryWarningChange = {
-                    batteryWarningEnabled = it
+                onBatteryWarningChange = { enabled ->
+                    scope.launch {
+                        context.settingsDataStore.edit { preferences ->
+                            preferences[SettingsKeys.BATTERY_WARNING_ENABLED] = enabled
+                        }
+                    }
                 },
                 onClose = {
                     showSettings = false
