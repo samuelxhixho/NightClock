@@ -62,6 +62,8 @@ import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Handler
 import android.os.Looper
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Switch
 
 
 class MainActivity : ComponentActivity() {
@@ -122,6 +124,22 @@ fun NightClockApp() {
         mutableStateOf(false)
     }
 
+    var soundEnabled by remember {
+        mutableStateOf(true)
+    }
+
+    var vibrationEnabled by remember {
+        mutableStateOf(true)
+    }
+
+    var batteryWarningEnabled by remember {
+        mutableStateOf(true)
+    }
+
+    var showSettings by remember {
+        mutableStateOf(false)
+    }
+
     var timerFinished by remember {
         mutableStateOf(false)
     }
@@ -170,13 +188,13 @@ fun NightClockApp() {
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .clickable {
+            .clickable(enabled = !showSettings) {
                 if (timerSeconds == 0 && !timerFinished) {
                     showTimerControls = !showTimerControls
                 }
             }
     ) {
-        if (isPowerSaveMode) {
+        if (batteryWarningEnabled && isPowerSaveMode) {
             PowerSaverWarning(
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -184,11 +202,32 @@ fun NightClockApp() {
             )
         }
 
+        if (timerSeconds == 0 && !timerFinished) {
+            TextButton(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 18.dp, end = 24.dp),
+                onClick = {
+                    showSettings = true
+                    showTimerControls = false
+                }
+            ) {
+                Text(
+                    text = "Settings",
+                    color = Color(0xFF666666),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Light
+                )
+            }
+        }
+
         if (timerFinished) {
             TimerDoneScreen(
                 modifier = Modifier.fillMaxSize(),
                 currentTimeText = timeText,
                 context = context,
+                soundEnabled = soundEnabled,
+                vibrationEnabled = vibrationEnabled,
                 onDismiss = {
                     timerFinished = false
                     timerSeconds = 0
@@ -242,6 +281,27 @@ fun NightClockApp() {
                     }
                 )
             }
+        }
+
+        if (showSettings) {
+            SettingsOverlay(
+                modifier = Modifier.align(Alignment.Center),
+                soundEnabled = soundEnabled,
+                vibrationEnabled = vibrationEnabled,
+                batteryWarningEnabled = batteryWarningEnabled,
+                onSoundChange = {
+                    soundEnabled = it
+                },
+                onVibrationChange = {
+                    vibrationEnabled = it
+                },
+                onBatteryWarningChange = {
+                    batteryWarningEnabled = it
+                },
+                onClose = {
+                    showSettings = false
+                }
+            )
         }
     }
 }
@@ -350,11 +410,18 @@ fun TimerDoneScreen(
     modifier: Modifier = Modifier,
     currentTimeText: String,
     context: Context,
+    soundEnabled: Boolean,
+    vibrationEnabled: Boolean,
     onDismiss: () -> Unit
-) {
+){
     LaunchedEffect(Unit) {
-        vibrateTimerFinished(context)
-        playTimerFinishedSound()
+        if (vibrationEnabled) {
+            vibrateTimerFinished(context)
+        }
+
+        if (soundEnabled) {
+            playTimerFinishedSound()
+        }
     }
 
     Box(
@@ -532,6 +599,117 @@ fun PowerSaverWarning(
         fontSize = 13.sp,
         fontWeight = FontWeight.Light
     )
+}
+
+@Composable
+fun SettingsOverlay(
+    modifier: Modifier = Modifier,
+    soundEnabled: Boolean,
+    vibrationEnabled: Boolean,
+    batteryWarningEnabled: Boolean,
+    onSoundChange: (Boolean) -> Unit,
+    onVibrationChange: (Boolean) -> Unit,
+    onBatteryWarningChange: (Boolean) -> Unit,
+    onClose: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .width(360.dp)
+            .background(
+                color = Color(0xFF080808),
+                shape = RoundedCornerShape(28.dp)
+            )
+            .padding(24.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text(
+            text = "Settings",
+            color = Color.White,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.ExtraLight
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        SettingsRow(
+            title = "Sound",
+            subtitle = "Play a soft alarm when timer ends",
+            checked = soundEnabled,
+            onCheckedChange = onSoundChange
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        SettingsRow(
+            title = "Vibration",
+            subtitle = "Vibrate when timer ends",
+            checked = vibrationEnabled,
+            onCheckedChange = onVibrationChange
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        SettingsRow(
+            title = "Battery warning",
+            subtitle = "Show warning when battery saver is on",
+            checked = batteryWarningEnabled,
+            onCheckedChange = onBatteryWarningChange
+        )
+
+        Spacer(modifier = Modifier.height(22.dp))
+
+        TextButton(
+            modifier = Modifier.align(Alignment.End),
+            onClick = onClose
+        ) {
+            Text(
+                text = "Done",
+                color = Color(0xFFBDBDBD),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Light
+            )
+        }
+    }
+}
+
+@Composable
+fun SettingsRow(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Light
+            )
+
+            Text(
+                modifier = Modifier.padding(top = 3.dp),
+                text = subtitle,
+                color = Color(0xFF666666),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Light
+            )
+        }
+
+        Spacer(modifier = Modifier.width(18.dp))
+
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
+    }
 }
 
 fun formatTimer(seconds: Int): String {
