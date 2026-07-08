@@ -27,3 +27,8 @@ outputs/
 secrets.properties
 serviceAccountKey.json
 google-services.json
+
+# Release APK output
+app/release/
+*.apk
+*.aab
