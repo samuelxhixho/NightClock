@@ -80,6 +80,8 @@ object SettingsKeys {
     val SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
     val VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
     val BATTERY_WARNING_ENABLED = booleanPreferencesKey("battery_warning_enabled")
+
+    val DIM_MODE_ENABLED = booleanPreferencesKey("dim_mode_enabled")
 }
 
 
@@ -122,6 +124,12 @@ fun NightClockApp() {
             preferences[SettingsKeys.VIBRATION_ENABLED] ?: true
         }
         .collectAsState(initial = true)
+
+    val dimModeEnabled by context.settingsDataStore.data
+        .map { preferences ->
+            preferences[SettingsKeys.DIM_MODE_ENABLED] ?: false
+        }
+        .collectAsState(initial = false)
 
     val batteryWarningEnabled by context.settingsDataStore.data
         .map { preferences ->
@@ -253,6 +261,7 @@ fun NightClockApp() {
                 context = context,
                 soundEnabled = soundEnabled,
                 vibrationEnabled = vibrationEnabled,
+                dimModeEnabled = dimModeEnabled,
                 onDismiss = {
                     timerFinished = false
                     timerSeconds = 0
@@ -269,6 +278,7 @@ fun NightClockApp() {
                 currentTimeText = timeText,
                 burnInOffset = burnInOffset,
                 isTimerRunning = isTimerRunning,
+                dimModeEnabled = dimModeEnabled,
                 onTogglePause = {
                     isTimerRunning = !isTimerRunning
                 },
@@ -289,7 +299,8 @@ fun NightClockApp() {
                         y = if (showTimerControls) (-44).dp else burnInOffset.y.dp
                     ),
                 timeText = timeText,
-                dateText = dateText
+                dateText = dateText,
+                dimModeEnabled = dimModeEnabled
             )
 
             if (showTimerControls) {
@@ -299,8 +310,8 @@ fun NightClockApp() {
                         .padding(bottom = 28.dp),
                     onStartTimer = { minutes ->
                         timerFinished = false
-                        timerSeconds = 5
-                        totalTimerSeconds = 5
+                        timerSeconds = minutes * 60
+                        totalTimerSeconds = minutes * 60
                         isTimerRunning = true
                         showTimerControls = false
                     }
@@ -314,6 +325,7 @@ fun NightClockApp() {
                 soundEnabled = soundEnabled,
                 vibrationEnabled = vibrationEnabled,
                 batteryWarningEnabled = batteryWarningEnabled,
+                dimModeEnabled = dimModeEnabled,
                 onSoundChange = { enabled ->
                     scope.launch {
                         context.settingsDataStore.edit { preferences ->
@@ -335,6 +347,13 @@ fun NightClockApp() {
                         }
                     }
                 },
+                onDimModeChange = { enabled ->
+                    scope.launch {
+                        context.settingsDataStore.edit { preferences ->
+                            preferences[SettingsKeys.DIM_MODE_ENABLED] = enabled
+                        }
+                    }
+                },
                 onClose = {
                     showSettings = false
                 }
@@ -343,12 +362,17 @@ fun NightClockApp() {
     }
 }
 
+
 @Composable
 fun ClockHomeScreen(
     modifier: Modifier = Modifier,
     timeText: String,
-    dateText: String
+    dateText: String,
+    dimModeEnabled: Boolean
 ) {
+    val mainTextColor = if (dimModeEnabled) Color(0xFF8A8A8A) else Color.White
+    val dateColor = if (dimModeEnabled) Color(0xFF4A4A4A) else Color(0xFF6F6F6F)
+
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -356,7 +380,7 @@ fun ClockHomeScreen(
     ) {
         Text(
             text = timeText,
-            color = Color.White,
+            color = mainTextColor,
             fontSize = 104.sp,
             fontWeight = FontWeight.ExtraLight,
             fontFamily = FontFamily.SansSerif,
@@ -366,7 +390,7 @@ fun ClockHomeScreen(
         Text(
             modifier = Modifier.padding(top = 4.dp),
             text = dateText,
-            color = Color(0xFF6F6F6F),
+            color = dateColor,
             fontSize = 20.sp,
             fontWeight = FontWeight.Light
         )
@@ -381,6 +405,7 @@ fun TimerRunningScreen(
     currentTimeText: String,
     burnInOffset: IntOffset,
     isTimerRunning: Boolean,
+    dimModeEnabled: Boolean,
     onTogglePause: () -> Unit,
     onReset: () -> Unit
 ) {
@@ -395,7 +420,8 @@ fun TimerRunningScreen(
                 .offset { burnInOffset },
             timerSeconds = timerSeconds,
             totalTimerSeconds = totalTimerSeconds,
-            ringSize = ringSize
+            ringSize = ringSize,
+            dimModeEnabled = dimModeEnabled
         )
 
         Text(
@@ -403,7 +429,7 @@ fun TimerRunningScreen(
                 .align(Alignment.TopEnd)
                 .padding(top = 28.dp, end = 36.dp),
             text = currentTimeText,
-            color = Color(0xFF4F4F4F),
+            color = if (dimModeEnabled) Color(0xFF3F3F3F) else Color(0xFF4F4F4F),
             fontSize = 18.sp,
             fontWeight = FontWeight.Light
         )
@@ -442,6 +468,7 @@ fun TimerRunningScreen(
     }
 }
 
+
 @Composable
 fun TimerDoneScreen(
     modifier: Modifier = Modifier,
@@ -449,6 +476,7 @@ fun TimerDoneScreen(
     context: Context,
     soundEnabled: Boolean,
     vibrationEnabled: Boolean,
+    dimModeEnabled: Boolean,
     onDismiss: () -> Unit
 ){
     LaunchedEffect(Unit) {
@@ -461,6 +489,9 @@ fun TimerDoneScreen(
         }
     }
 
+    val doneTextColor = if (dimModeEnabled) Color(0xFF8A8A8A) else Color.White
+    val timeColor = if (dimModeEnabled) Color(0xFF4A4A4A) else Color(0xFF666666)
+
     Box(
         modifier = modifier
     ) {
@@ -471,7 +502,7 @@ fun TimerDoneScreen(
         ) {
             Text(
                 text = "Done",
-                color = Color.White,
+                color = doneTextColor,
                 fontSize = 72.sp,
                 fontWeight = FontWeight.ExtraLight,
                 fontFamily = FontFamily.SansSerif,
@@ -482,7 +513,7 @@ fun TimerDoneScreen(
 
             Text(
                 text = currentTimeText,
-                color = Color(0xFF666666),
+                color = timeColor,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Light
             )
@@ -531,13 +562,19 @@ fun LargeRadialTimer(
     modifier: Modifier = Modifier,
     timerSeconds: Int,
     totalTimerSeconds: Int,
-    ringSize: Dp
+    ringSize: Dp,
+    dimModeEnabled: Boolean
 ) {
     val progress = if (totalTimerSeconds > 0) {
         timerSeconds.toFloat() / totalTimerSeconds.toFloat()
     } else {
         0f
     }
+
+    val progressColor = if (dimModeEnabled) Color(0xFF8A8A8A) else Color(0xFFEDEDED)
+    val mainTextColor = if (dimModeEnabled) Color(0xFF8A8A8A) else Color.White
+    val labelColor = if (dimModeEnabled) Color(0xFF454545) else Color(0xFF555555)
+
 
     Box(
         modifier = modifier.size(ringSize),
@@ -550,7 +587,7 @@ fun LargeRadialTimer(
             val inset = strokeWidth / 2f
 
             drawArc(
-                color = Color(0xFF121212),
+                color = progressColor,
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
@@ -563,7 +600,7 @@ fun LargeRadialTimer(
             )
 
             drawArc(
-                color = Color(0xFFEDEDED),
+                color = mainTextColor,
                 startAngle = -90f,
                 sweepAngle = 360f * progress,
                 useCenter = false,
@@ -581,7 +618,7 @@ fun LargeRadialTimer(
         ) {
             Text(
                 text = formatTimer(timerSeconds),
-                color = Color.White,
+                color = labelColor,
                 fontSize = 48.sp,
                 fontWeight = FontWeight.ExtraLight,
                 fontFamily = FontFamily.SansSerif,
@@ -647,35 +684,64 @@ fun SettingsOverlay(
     onSoundChange: (Boolean) -> Unit,
     onVibrationChange: (Boolean) -> Unit,
     onBatteryWarningChange: (Boolean) -> Unit,
+    dimModeEnabled: Boolean,
+    onDimModeChange: (Boolean) -> Unit,
     onClose: () -> Unit
 ) {
     Column(
         modifier = modifier
-            .width(360.dp)
+            .width(390.dp)
             .background(
                 color = Color(0xFF080808),
-                shape = RoundedCornerShape(28.dp)
+                shape = RoundedCornerShape(26.dp)
             )
-            .padding(24.dp),
+            .padding(20.dp),
         horizontalAlignment = Alignment.Start
     ) {
-        Text(
-            text = "Settings",
-            color = Color.White,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.ExtraLight
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Settings",
+                color = Color.White,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.ExtraLight
+            )
+
+            TextButton(
+                onClick = onClose,
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+            ) {
+                Text(
+                    text = "✕",
+                    color = Color(0xFFBDBDBD),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Light
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        SettingsRow(
+            title = "Dim mode",
+            subtitle = "Softer colors for night use",
+            checked = dimModeEnabled,
+            onCheckedChange = onDimModeChange
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         SettingsRow(
             title = "Sound",
-            subtitle = "Play a soft alarm when timer ends",
+            subtitle = "Soft alarm when timer ends",
             checked = soundEnabled,
             onCheckedChange = onSoundChange
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         SettingsRow(
             title = "Vibration",
@@ -684,28 +750,14 @@ fun SettingsOverlay(
             onCheckedChange = onVibrationChange
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         SettingsRow(
             title = "Battery warning",
-            subtitle = "Show warning when battery saver is on",
+            subtitle = "Warn when battery saver is on",
             checked = batteryWarningEnabled,
             onCheckedChange = onBatteryWarningChange
         )
-
-        Spacer(modifier = Modifier.height(22.dp))
-
-        TextButton(
-            modifier = Modifier.align(Alignment.End),
-            onClick = onClose
-        ) {
-            Text(
-                text = "Done",
-                color = Color(0xFFBDBDBD),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Light
-            )
-        }
     }
 }
 
