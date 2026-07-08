@@ -72,7 +72,10 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-
+import androidx.compose.foundation.border
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.heightIn
 
 
 val Context.settingsDataStore by preferencesDataStore(name = "night_clock_settings")
@@ -85,6 +88,8 @@ object SettingsKeys {
     val DIM_MODE_ENABLED = booleanPreferencesKey("dim_mode_enabled")
 
     val CLOCK_STYLE = intPreferencesKey("clock_style")
+
+    val ACCENT_COLOR = intPreferencesKey("accent_color")
 }
 
 
@@ -147,6 +152,12 @@ fun NightClockApp() {
     val clockStyle by context.settingsDataStore.data
         .map { preferences ->
             preferences[SettingsKeys.CLOCK_STYLE] ?: 0
+        }
+        .collectAsState(initial = 0)
+
+    val accentColorIndex by context.settingsDataStore.data
+        .map { preferences ->
+            preferences[SettingsKeys.ACCENT_COLOR] ?: 0
         }
         .collectAsState(initial = 0)
 
@@ -228,6 +239,10 @@ fun NightClockApp() {
     val hourText = currentTime.format(DateTimeFormatter.ofPattern("HH"))
     val minuteText = currentTime.format(DateTimeFormatter.ofPattern("mm"))
     val secondText = currentTime.format(DateTimeFormatter.ofPattern("ss"))
+    val appColors = getNightClockUiColors(
+        accentColorIndex = accentColorIndex,
+        dimModeEnabled = dimModeEnabled
+    )
 
     Box(
         modifier = Modifier
@@ -274,6 +289,7 @@ fun NightClockApp() {
                 soundEnabled = soundEnabled,
                 vibrationEnabled = vibrationEnabled,
                 dimModeEnabled = dimModeEnabled,
+                appColors = appColors,
                 onDismiss = {
                     timerFinished = false
                     timerSeconds = 0
@@ -291,6 +307,7 @@ fun NightClockApp() {
                 burnInOffset = burnInOffset,
                 isTimerRunning = isTimerRunning,
                 dimModeEnabled = dimModeEnabled,
+                appColors = appColors,
                 onTogglePause = {
                     isTimerRunning = !isTimerRunning
                 },
@@ -316,7 +333,8 @@ fun NightClockApp() {
                 secondText = secondText,
                 dateText = dateText,
                 dimModeEnabled = dimModeEnabled,
-                clockStyle = clockStyle
+                clockStyle = clockStyle,
+                appColors = appColors
             )
 
             if (showTimerControls) {
@@ -324,6 +342,7 @@ fun NightClockApp() {
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 28.dp),
+                    appColors = appColors,
                     onStartTimer = { minutes ->
                         timerFinished = false
                         timerSeconds = minutes * 60
@@ -343,6 +362,14 @@ fun NightClockApp() {
                 batteryWarningEnabled = batteryWarningEnabled,
                 dimModeEnabled = dimModeEnabled,
                 clockStyle = clockStyle,
+                accentColorIndex = accentColorIndex,
+                onAccentColorChange = { index ->
+                    scope.launch {
+                        context.settingsDataStore.edit { preferences ->
+                            preferences[SettingsKeys.ACCENT_COLOR] = index
+                        }
+                    }
+                },
                 onSoundChange = { enabled ->
                     scope.launch {
                         context.settingsDataStore.edit { preferences ->
@@ -396,10 +423,11 @@ fun ClockHomeScreen(
     secondText: String,
     dateText: String,
     dimModeEnabled: Boolean,
-    clockStyle: Int
+    clockStyle: Int,
+    appColors: NightClockUiColors
 ) {
-    val mainTextColor = if (dimModeEnabled) Color(0xFF8A8A8A) else Color.White
-    val secondaryTextColor = if (dimModeEnabled) Color(0xFF4A4A4A) else Color(0xFF6F6F6F)
+    val mainTextColor = appColors.main
+    val secondaryTextColor = appColors.secondary
 
     Column(
         modifier = modifier,
@@ -534,6 +562,7 @@ fun TimerRunningScreen(
     isTimerRunning: Boolean,
     dimModeEnabled: Boolean,
     onTogglePause: () -> Unit,
+    appColors: NightClockUiColors,
     onReset: () -> Unit
 ) {
     BoxWithConstraints(
@@ -542,6 +571,7 @@ fun TimerRunningScreen(
         val ringSize = minOf(maxHeight * 0.58f, 270.dp)
 
         LargeRadialTimer(
+            appColors = appColors,
             modifier = Modifier
                 .align(Alignment.Center)
                 .offset { burnInOffset },
@@ -556,7 +586,7 @@ fun TimerRunningScreen(
                 .align(Alignment.TopEnd)
                 .padding(top = 28.dp, end = 36.dp),
             text = currentTimeText,
-            color = if (dimModeEnabled) Color(0xFF3F3F3F) else Color(0xFF4F4F4F),
+            color = appColors.secondary,
             fontSize = 18.sp,
             fontWeight = FontWeight.Light
         )
@@ -573,7 +603,7 @@ fun TimerRunningScreen(
             ) {
                 Text(
                     text = if (isTimerRunning) "Pause" else "Resume",
-                    color = Color(0xFFBDBDBD),
+                    color = appColors.main,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Light
                 )
@@ -586,7 +616,7 @@ fun TimerRunningScreen(
             ) {
                 Text(
                     text = "Reset",
-                    color = Color(0xFF666666),
+                    color = appColors.secondary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Light
                 )
@@ -604,6 +634,7 @@ fun TimerDoneScreen(
     soundEnabled: Boolean,
     vibrationEnabled: Boolean,
     dimModeEnabled: Boolean,
+    appColors: NightClockUiColors,
     onDismiss: () -> Unit
 ){
     LaunchedEffect(Unit) {
@@ -654,7 +685,7 @@ fun TimerDoneScreen(
         ) {
             Text(
                 text = "Dismiss",
-                color = Color(0xFF777777),
+                color = appColors.secondary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Light
             )
@@ -665,6 +696,7 @@ fun TimerDoneScreen(
 @Composable
 fun QuickTimerControls(
     modifier: Modifier = Modifier,
+    appColors: NightClockUiColors,
     onStartTimer: (Int) -> Unit
 ) {
     Row(
@@ -672,15 +704,15 @@ fun QuickTimerControls(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TimerButton("5 min", onClick = { onStartTimer(5) })
+        TimerButton("5 min", appColors = appColors, onClick = { onStartTimer(5) })
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        TimerButton("15 min", onClick = { onStartTimer(15) })
+        TimerButton("15 min", appColors = appColors, onClick = { onStartTimer(15) })
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        TimerButton("30 min", onClick = { onStartTimer(30) })
+        TimerButton("30 min", appColors = appColors, onClick = { onStartTimer(30) })
     }
 }
 
@@ -690,7 +722,8 @@ fun LargeRadialTimer(
     timerSeconds: Int,
     totalTimerSeconds: Int,
     ringSize: Dp,
-    dimModeEnabled: Boolean
+    dimModeEnabled: Boolean,
+    appColors: NightClockUiColors
 ) {
     val progress = if (totalTimerSeconds > 0) {
         timerSeconds.toFloat() / totalTimerSeconds.toFloat()
@@ -698,9 +731,10 @@ fun LargeRadialTimer(
         0f
     }
 
-    val progressColor = if (dimModeEnabled) Color(0xFF8A8A8A) else Color(0xFFEDEDED)
-    val mainTextColor = if (dimModeEnabled) Color(0xFF8A8A8A) else Color.White
-    val labelColor = if (dimModeEnabled) Color(0xFF454545) else Color(0xFF555555)
+    val progressColor = appColors.main
+    val mainTextColor = appColors.main
+    val labelColor = appColors.secondary
+    val trackColor = appColors.track
 
 
     Box(
@@ -714,7 +748,7 @@ fun LargeRadialTimer(
             val inset = strokeWidth / 2f
 
             drawArc(
-                color = progressColor,
+                color = trackColor,
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
@@ -727,7 +761,7 @@ fun LargeRadialTimer(
             )
 
             drawArc(
-                color = mainTextColor,
+                color = progressColor,
                 startAngle = -90f,
                 sweepAngle = 360f * progress,
                 useCenter = false,
@@ -745,7 +779,7 @@ fun LargeRadialTimer(
         ) {
             Text(
                 text = formatTimer(timerSeconds),
-                color = labelColor,
+                color = mainTextColor,
                 fontSize = 48.sp,
                 fontWeight = FontWeight.ExtraLight,
                 fontFamily = FontFamily.SansSerif,
@@ -755,7 +789,7 @@ fun LargeRadialTimer(
             Text(
                 modifier = Modifier.padding(top = 4.dp),
                 text = "remaining",
-                color = Color(0xFF555555),
+                color = labelColor,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Light
             )
@@ -763,18 +797,52 @@ fun LargeRadialTimer(
     }
 }
 
+
+data class NightClockUiColors(
+    val main: Color,
+    val secondary: Color,
+    val muted: Color,
+    val track: Color,
+    val buttonBackground: Color,
+    val buttonBorder: Color
+)
+
+fun getNightClockUiColors(
+    accentColorIndex: Int,
+    dimModeEnabled: Boolean
+): NightClockUiColors {
+    val accent = when (accentColorIndex) {
+        1 -> Color(0xFFFF5A5F) // Red
+        2 -> Color(0xFF64B5F6) // Blue
+        3 -> Color(0xFF66BB6A) // Green
+        4 -> Color(0xFFB388FF) // Purple
+        5 -> Color(0xFFFFC857) // Amber
+        else -> Color.White     // White
+    }
+
+    return NightClockUiColors(
+        main = if (dimModeEnabled) accent.copy(alpha = 0.55f) else accent,
+        secondary = if (dimModeEnabled) accent.copy(alpha = 0.32f) else accent.copy(alpha = 0.55f),
+        muted = if (dimModeEnabled) accent.copy(alpha = 0.22f) else accent.copy(alpha = 0.38f),
+        track = if (dimModeEnabled) accent.copy(alpha = 0.08f) else accent.copy(alpha = 0.14f),
+        buttonBackground = Color(0xFF090909),
+        buttonBorder = if (dimModeEnabled) accent.copy(alpha = 0.25f) else accent.copy(alpha = 0.40f)
+    )
+}
+
 @Composable
 fun TimerButton(
     text: String,
+    appColors: NightClockUiColors,
     onClick: () -> Unit
-) {
+){
     Button(
         onClick = onClick,
         shape = RoundedCornerShape(100.dp),
-        border = BorderStroke(1.dp, Color(0xFF242424)),
+        border = BorderStroke(1.dp, appColors.buttonBorder),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF090909),
-            contentColor = Color(0xFFDADADA)
+            containerColor = appColors.buttonBackground,
+            contentColor = appColors.main
         ),
         contentPadding = PaddingValues(
             horizontal = 18.dp,
@@ -815,17 +883,20 @@ fun SettingsOverlay(
     onDimModeChange: (Boolean) -> Unit,
     clockStyle: Int,
     onClockStyleChange: (Int) -> Unit,
+    accentColorIndex: Int,
+    onAccentColorChange: (Int) -> Unit,
     onClose: () -> Unit
 ) {
     Column(
         modifier = modifier
-            .width(390.dp)
+            .width(430.dp)
+            .heightIn(max = 330.dp)
             .background(
                 color = Color(0xFF080808),
                 shape = RoundedCornerShape(26.dp)
             )
-            .padding(20.dp),
-        horizontalAlignment = Alignment.Start
+            .verticalScroll(rememberScrollState())
+            .padding(18.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -858,6 +929,15 @@ fun SettingsOverlay(
             selectedStyle = clockStyle,
             onStyleSelected = onClockStyleChange
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        AccentColorPicker(
+            selectedAccentColor = accentColorIndex,
+            onAccentColorSelected = onAccentColorChange
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         Spacer(modifier = Modifier.height(14.dp))
 
@@ -966,6 +1046,63 @@ fun ClockStylePicker(
         }
     }
 }
+
+
+
+@Composable
+fun AccentColorPicker(
+    selectedAccentColor: Int,
+    onAccentColorSelected: (Int) -> Unit
+) {
+    val colors = listOf(
+        "White" to Color.White,
+        "Red" to Color(0xFFFF5A5F),
+        "Blue" to Color(0xFF64B5F6),
+        "Green" to Color(0xFF66BB6A),
+        "Purple" to Color(0xFFB388FF),
+        "Amber" to Color(0xFFFFC857)
+    )
+
+    Column {
+        Text(
+            text = "Accent color",
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Light
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            colors.forEachIndexed { index, colorOption ->
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .background(
+                            color = colorOption.second,
+                            shape = RoundedCornerShape(100.dp)
+                        )
+                        .border(
+                            width = if (selectedAccentColor == index) 2.dp else 1.dp,
+                            color = if (selectedAccentColor == index) Color.White else Color(0xFF333333),
+                            shape = RoundedCornerShape(100.dp)
+                        )
+                        .clickable {
+                            onAccentColorSelected(index)
+                        }
+                )
+
+                if (index != colors.lastIndex) {
+                    Spacer(modifier = Modifier.width(10.dp))
+                }
+            }
+        }
+    }
+}
+
 
 @Composable
 fun SettingsRow(
