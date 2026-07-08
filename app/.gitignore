@@ -1,1 +1,29 @@
-/build
+/build# Android Studio / Gradle
+      .gradle/
+      build/
+      */build/
+      local.properties
+      .idea/
+      *.iml
+
+      # Kotlin / Java
+      *.class
+
+      # Logs
+      *.log
+
+      # APK / build outputs
+      *.apk
+      *.aab
+      outputs/
+
+      # Signing keys - DO NOT PUSH
+      *.jks
+      *.keystore
+
+      # Secrets
+      .env
+      .env.*
+      secrets.properties
+      serviceAccountKey.json
+      google-services.json
