@@ -67,6 +67,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.map
@@ -82,6 +83,8 @@ object SettingsKeys {
     val BATTERY_WARNING_ENABLED = booleanPreferencesKey("battery_warning_enabled")
 
     val DIM_MODE_ENABLED = booleanPreferencesKey("dim_mode_enabled")
+
+    val CLOCK_STYLE = intPreferencesKey("clock_style")
 }
 
 
@@ -140,6 +143,12 @@ fun NightClockApp() {
     val powerManager = remember {
         context.getSystemService(Context.POWER_SERVICE) as PowerManager
     }
+
+    val clockStyle by context.settingsDataStore.data
+        .map { preferences ->
+            preferences[SettingsKeys.CLOCK_STYLE] ?: 0
+        }
+        .collectAsState(initial = 0)
 
     var isPowerSaveMode by remember {
         mutableStateOf(powerManager.isPowerSaveMode)
@@ -216,6 +225,9 @@ fun NightClockApp() {
 
     val timeText = currentTime.format(DateTimeFormatter.ofPattern("HH:mm"))
     val dateText = currentTime.format(DateTimeFormatter.ofPattern("EEEE, MMMM d"))
+    val hourText = currentTime.format(DateTimeFormatter.ofPattern("HH"))
+    val minuteText = currentTime.format(DateTimeFormatter.ofPattern("mm"))
+    val secondText = currentTime.format(DateTimeFormatter.ofPattern("ss"))
 
     Box(
         modifier = Modifier
@@ -299,8 +311,12 @@ fun NightClockApp() {
                         y = if (showTimerControls) (-44).dp else burnInOffset.y.dp
                     ),
                 timeText = timeText,
+                hourText = hourText,
+                minuteText = minuteText,
+                secondText = secondText,
                 dateText = dateText,
-                dimModeEnabled = dimModeEnabled
+                dimModeEnabled = dimModeEnabled,
+                clockStyle = clockStyle
             )
 
             if (showTimerControls) {
@@ -326,6 +342,7 @@ fun NightClockApp() {
                 vibrationEnabled = vibrationEnabled,
                 batteryWarningEnabled = batteryWarningEnabled,
                 dimModeEnabled = dimModeEnabled,
+                clockStyle = clockStyle,
                 onSoundChange = { enabled ->
                     scope.launch {
                         context.settingsDataStore.edit { preferences ->
@@ -356,6 +373,13 @@ fun NightClockApp() {
                 },
                 onClose = {
                     showSettings = false
+                },
+                onClockStyleChange = { style ->
+                    scope.launch {
+                        context.settingsDataStore.edit { preferences ->
+                            preferences[SettingsKeys.CLOCK_STYLE] = style
+                        }
+                    }
                 }
             )
         }
@@ -367,36 +391,139 @@ fun NightClockApp() {
 fun ClockHomeScreen(
     modifier: Modifier = Modifier,
     timeText: String,
+    hourText: String,
+    minuteText: String,
+    secondText: String,
     dateText: String,
-    dimModeEnabled: Boolean
+    dimModeEnabled: Boolean,
+    clockStyle: Int
 ) {
     val mainTextColor = if (dimModeEnabled) Color(0xFF8A8A8A) else Color.White
-    val dateColor = if (dimModeEnabled) Color(0xFF4A4A4A) else Color(0xFF6F6F6F)
+    val secondaryTextColor = if (dimModeEnabled) Color(0xFF4A4A4A) else Color(0xFF6F6F6F)
 
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = timeText,
-            color = mainTextColor,
-            fontSize = 104.sp,
-            fontWeight = FontWeight.ExtraLight,
-            fontFamily = FontFamily.SansSerif,
-            letterSpacing = 2.sp
-        )
+        when (clockStyle) {
+            0 -> {
+                // Classic: 14:32
+                Text(
+                    text = timeText,
+                    color = mainTextColor,
+                    fontSize = 104.sp,
+                    fontWeight = FontWeight.ExtraLight,
+                    fontFamily = FontFamily.SansSerif,
+                    letterSpacing = 2.sp
+                )
+            }
+
+            1 -> {
+                // Stacked: 14 above 32
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = hourText,
+                        color = mainTextColor,
+                        fontSize = 82.sp,
+                        fontWeight = FontWeight.ExtraLight,
+                        fontFamily = FontFamily.SansSerif,
+                        letterSpacing = 2.sp
+                    )
+
+                    Text(
+                        text = minuteText,
+                        color = mainTextColor,
+                        fontSize = 82.sp,
+                        fontWeight = FontWeight.ExtraLight,
+                        fontFamily = FontFamily.SansSerif,
+                        letterSpacing = 2.sp
+                    )
+                }
+            }
+
+            2 -> {
+                // Minimal: 14 · 32
+                Text(
+                    text = "$hourText · $minuteText",
+                    color = mainTextColor,
+                    fontSize = 96.sp,
+                    fontWeight = FontWeight.ExtraLight,
+                    fontFamily = FontFamily.SansSerif,
+                    letterSpacing = 4.sp
+                )
+            }
+
+            3 -> {
+                // Split: 14 | 32
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = hourText,
+                        color = mainTextColor,
+                        fontSize = 96.sp,
+                        fontWeight = FontWeight.ExtraLight,
+                        fontFamily = FontFamily.SansSerif
+                    )
+
+                    Text(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        text = "|",
+                        color = secondaryTextColor,
+                        fontSize = 64.sp,
+                        fontWeight = FontWeight.ExtraLight
+                    )
+
+                    Text(
+                        text = minuteText,
+                        color = mainTextColor,
+                        fontSize = 96.sp,
+                        fontWeight = FontWeight.ExtraLight,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                }
+            }
+
+            4 -> {
+                // Seconds: 14:32:08
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = timeText,
+                        color = mainTextColor,
+                        fontSize = 96.sp,
+                        fontWeight = FontWeight.ExtraLight,
+                        fontFamily = FontFamily.SansSerif,
+                        letterSpacing = 2.sp
+                    )
+
+                    Text(
+                        modifier = Modifier.padding(start = 12.dp, bottom = 12.dp),
+                        text = secondText,
+                        color = secondaryTextColor,
+                        fontSize = 34.sp,
+                        fontWeight = FontWeight.Light,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                }
+            }
+        }
 
         Text(
-            modifier = Modifier.padding(top = 4.dp),
+            modifier = Modifier.padding(top = 6.dp),
             text = dateText,
-            color = dateColor,
+            color = secondaryTextColor,
             fontSize = 20.sp,
             fontWeight = FontWeight.Light
         )
     }
 }
-
 @Composable
 fun TimerRunningScreen(
     modifier: Modifier = Modifier,
@@ -686,6 +813,8 @@ fun SettingsOverlay(
     onBatteryWarningChange: (Boolean) -> Unit,
     dimModeEnabled: Boolean,
     onDimModeChange: (Boolean) -> Unit,
+    clockStyle: Int,
+    onClockStyleChange: (Int) -> Unit,
     onClose: () -> Unit
 ) {
     Column(
@@ -725,6 +854,13 @@ fun SettingsOverlay(
 
         Spacer(modifier = Modifier.height(14.dp))
 
+        ClockStylePicker(
+            selectedStyle = clockStyle,
+            onStyleSelected = onClockStyleChange
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
         SettingsRow(
             title = "Dim mode",
             subtitle = "Softer colors for night use",
@@ -758,6 +894,76 @@ fun SettingsOverlay(
             checked = batteryWarningEnabled,
             onCheckedChange = onBatteryWarningChange
         )
+    }
+}
+
+
+@Composable
+fun ClockStylePicker(
+    selectedStyle: Int,
+    onStyleSelected: (Int) -> Unit
+) {
+    val styles = listOf(
+        "Classic",
+        "Stacked",
+        "Minimal",
+        "Split",
+        "Seconds"
+    )
+
+    Column {
+        Text(
+            text = "Clock style",
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Light
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            styles.forEachIndexed { index, label ->
+                Button(
+                    onClick = {
+                        onStyleSelected(index)
+                    },
+                    shape = RoundedCornerShape(100.dp),
+                    border = BorderStroke(
+                        1.dp,
+                        if (selectedStyle == index) Color(0xFFBDBDBD) else Color(0xFF242424)
+                    ),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (selectedStyle == index) {
+                            Color(0xFF1A1A1A)
+                        } else {
+                            Color(0xFF090909)
+                        },
+                        contentColor = if (selectedStyle == index) {
+                            Color.White
+                        } else {
+                            Color(0xFF8A8A8A)
+                        }
+                    ),
+                    contentPadding = PaddingValues(
+                        horizontal = 10.dp,
+                        vertical = 6.dp
+                    )
+                ) {
+                    Text(
+                        text = label,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Light
+                    )
+                }
+
+                if (index != styles.lastIndex) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                }
+            }
+        }
     }
 }
 
