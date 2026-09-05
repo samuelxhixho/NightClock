@@ -3,6 +3,8 @@ package com.samuel.nightclock.ui.clock
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,7 +14,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.width
 import com.samuel.nightclock.NightClockUiColors
+import com.samuel.nightclock.model.ClockStyle
+import com.samuel.nightclock.model.ClockFont
 
 @Composable
 fun ClockHomeScreen(
@@ -21,13 +26,23 @@ fun ClockHomeScreen(
     hourText: String,
     minuteText: String,
     secondText: String,
+    hourValue: Int,
+    minuteValue: Int,
+    secondValue: Int,
     dateText: String,
-    dimModeEnabled: Boolean,
-    clockStyle: Int,
+    clockStyle: ClockStyle,
+    clockFont: ClockFont,
     appColors: NightClockUiColors
 ) {
     val mainTextColor = appColors.main
     val secondaryTextColor = appColors.secondary
+
+    val selectedFontFamily = when (clockFont) {
+        ClockFont.SANS -> FontFamily.SansSerif
+        ClockFont.SERIF -> FontFamily.Serif
+        ClockFont.MONOSPACE -> FontFamily.Monospace
+        ClockFont.CURSIVE -> FontFamily.Cursive
+    }
 
     Column(
         modifier = modifier,
@@ -35,18 +50,18 @@ fun ClockHomeScreen(
         verticalArrangement = Arrangement.Center
     ) {
         when (clockStyle) {
-            0 -> {
+            ClockStyle.CLASSIC -> {
                 Text(
                     text = timeText,
                     color = mainTextColor,
                     fontSize = 104.sp,
                     fontWeight = FontWeight.ExtraLight,
-                    fontFamily = FontFamily.SansSerif,
+                    fontFamily = selectedFontFamily,
                     letterSpacing = 2.sp
                 )
             }
 
-            1 -> {
+            ClockStyle.STACKED -> {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -55,7 +70,7 @@ fun ClockHomeScreen(
                         color = mainTextColor,
                         fontSize = 82.sp,
                         fontWeight = FontWeight.ExtraLight,
-                        fontFamily = FontFamily.SansSerif,
+                        fontFamily = selectedFontFamily,
                         letterSpacing = 2.sp
                     )
 
@@ -64,24 +79,24 @@ fun ClockHomeScreen(
                         color = mainTextColor,
                         fontSize = 82.sp,
                         fontWeight = FontWeight.ExtraLight,
-                        fontFamily = FontFamily.SansSerif,
+                        fontFamily = selectedFontFamily,
                         letterSpacing = 2.sp
                     )
                 }
             }
 
-            2 -> {
+            ClockStyle.MINIMAL -> {
                 Text(
                     text = "$hourText · $minuteText",
                     color = mainTextColor,
                     fontSize = 96.sp,
                     fontWeight = FontWeight.ExtraLight,
-                    fontFamily = FontFamily.SansSerif,
+                    fontFamily = selectedFontFamily,
                     letterSpacing = 4.sp
                 )
             }
 
-            3 -> {
+            ClockStyle.SPLIT -> {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
@@ -91,7 +106,7 @@ fun ClockHomeScreen(
                         color = mainTextColor,
                         fontSize = 96.sp,
                         fontWeight = FontWeight.ExtraLight,
-                        fontFamily = FontFamily.SansSerif
+                        fontFamily = selectedFontFamily
                     )
 
                     Text(
@@ -107,12 +122,12 @@ fun ClockHomeScreen(
                         color = mainTextColor,
                         fontSize = 96.sp,
                         fontWeight = FontWeight.ExtraLight,
-                        fontFamily = FontFamily.SansSerif
+                        fontFamily = selectedFontFamily
                     )
                 }
             }
 
-            4 -> {
+            ClockStyle.SECONDS -> {
                 Row(
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.Center
@@ -122,7 +137,7 @@ fun ClockHomeScreen(
                         color = mainTextColor,
                         fontSize = 96.sp,
                         fontWeight = FontWeight.ExtraLight,
-                        fontFamily = FontFamily.SansSerif,
+                        fontFamily = selectedFontFamily,
                         letterSpacing = 2.sp
                     )
 
@@ -135,18 +150,107 @@ fun ClockHomeScreen(
                         color = secondaryTextColor,
                         fontSize = 34.sp,
                         fontWeight = FontWeight.Light,
-                        fontFamily = FontFamily.SansSerif
+                        fontFamily = selectedFontFamily
                     )
+                }
+            }
+
+            ClockStyle.ANALOG -> {
+                AnalogClock(
+                    hour = hourValue,
+                    minute = minuteValue,
+                    second = secondValue,
+                    appColors = appColors
+                )
+            }
+
+            ClockStyle.FOCUS -> {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = hourText,
+                        color = mainTextColor,
+                        fontSize = 116.sp,
+                        fontWeight = FontWeight.ExtraLight,
+                        fontFamily = selectedFontFamily
+                    )
+
+                    Text(
+                        modifier = Modifier.padding(
+                            start = 14.dp,
+                            top = 28.dp
+                        ),
+                        text = minuteText,
+                        color = secondaryTextColor,
+                        fontSize = 48.sp,
+                        fontWeight = FontWeight.Light,
+                        fontFamily = selectedFontFamily
+                    )
+                }
+            }
+
+            ClockStyle.WIDE -> {
+                Row(
+                    modifier = Modifier.width(430.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Text(
+                            text = hourText,
+                            color = mainTextColor,
+                            fontSize = 104.sp,
+                            fontWeight = FontWeight.ExtraLight,
+                            fontFamily = selectedFontFamily,
+                            letterSpacing = 3.sp
+                        )
+
+                        Text(
+                            text = "HOUR",
+                            color = secondaryTextColor,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Light,
+                            letterSpacing = 3.sp
+                        )
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(
+                            text = minuteText,
+                            color = mainTextColor,
+                            fontSize = 104.sp,
+                            fontWeight = FontWeight.ExtraLight,
+                            fontFamily = selectedFontFamily,
+                            letterSpacing = 3.sp
+                        )
+
+                        Text(
+                            text = "MINUTE",
+                            color = secondaryTextColor,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Light,
+                            letterSpacing = 3.sp
+                        )
+                    }
                 }
             }
         }
 
+        Spacer(modifier = Modifier.height(6.dp))
+
         Text(
-            modifier = Modifier.padding(top = 6.dp),
             text = dateText,
             color = secondaryTextColor,
             fontSize = 20.sp,
             fontWeight = FontWeight.Light
         )
+
+
     }
 }

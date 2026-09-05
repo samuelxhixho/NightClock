@@ -8,13 +8,15 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.samuel.nightclock.data.SettingsRepository
+import com.samuel.nightclock.model.AlarmSound
+import com.samuel.nightclock.model.ClockStyle
+import com.samuel.nightclock.model.ClockFont
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
-import com.samuel.nightclock.model.AlarmSound
 
 class NightClockViewModel(
     application: Application
@@ -47,10 +49,16 @@ class NightClockViewModel(
         initialValue = false
     )
 
-    val clockStyle = settingsRepository.clockStyle.stateIn(
+    val clockStyleModel = settingsRepository.clockStyle.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = 0
+        initialValue = ClockStyle.CLASSIC
+    )
+
+    val clockFont = settingsRepository.clockFont.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = ClockFont.SANS
     )
 
     val accentColorIndex = settingsRepository.accentColorIndex.stateIn(
@@ -191,9 +199,15 @@ class NightClockViewModel(
         }
     }
 
-    fun setClockStyle(style: Int) {
+    fun setClockStyle(style: ClockStyle) {
         viewModelScope.launch {
             settingsRepository.setClockStyle(style)
+        }
+    }
+
+    fun setClockFont(clockFont: ClockFont) {
+        viewModelScope.launch {
+            settingsRepository.setClockFont(clockFont)
         }
     }
 

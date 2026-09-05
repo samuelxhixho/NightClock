@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Slider
 import com.samuel.nightclock.model.AlarmSound
+import com.samuel.nightclock.model.ClockStyle
+import com.samuel.nightclock.model.ClockFont
 
 @Composable
 fun SettingsOverlay(
@@ -58,9 +60,11 @@ fun SettingsOverlay(
     onAutoDimChange: (Boolean) -> Unit,
     onEditAutoDimStart: () -> Unit,
     onEditAutoDimEnd: () -> Unit,
-    clockStyle: Int,
-    onClockStyleChange: (Int) -> Unit,
+    clockStyle: ClockStyle,
+    onClockStyleChange: (ClockStyle) -> Unit,
     accentColorIndex: Int,
+    clockFont: ClockFont,
+    onClockFontChange: (ClockFont) -> Unit,
     onAccentColorChange: (Int) -> Unit,
     timerPreset1: Int,
     timerPreset2: Int,
@@ -114,6 +118,13 @@ fun SettingsOverlay(
         ClockStylePicker(
             selectedStyle = clockStyle,
             onStyleSelected = onClockStyleChange
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        ClockFontPicker(
+            selectedFont = clockFont,
+            onFontSelected = onClockFontChange
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -242,15 +253,18 @@ fun SettingsOverlay(
 
 @Composable
 private fun ClockStylePicker(
-    selectedStyle: Int,
-    onStyleSelected: (Int) -> Unit
+    selectedStyle: ClockStyle,
+    onStyleSelected: (ClockStyle) -> Unit
 ) {
     val styles = listOf(
-        "Classic",
-        "Stacked",
-        "Minimal",
-        "Split",
-        "Seconds"
+        ClockStyle.CLASSIC,
+        ClockStyle.STACKED,
+        ClockStyle.MINIMAL,
+        ClockStyle.SPLIT,
+        ClockStyle.SECONDS,
+        ClockStyle.ANALOG,
+        ClockStyle.FOCUS,
+        ClockStyle.WIDE
     )
 
     Column {
@@ -263,50 +277,54 @@ private fun ClockStylePicker(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            styles.forEachIndexed { index, label ->
-                Button(
-                    onClick = {
-                        onStyleSelected(index)
-                    },
-                    shape = RoundedCornerShape(100.dp),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = if (selectedStyle == index) {
-                            Color(0xFFBDBDBD)
-                        } else {
-                            Color(0xFF242424)
-                        }
-                    ),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedStyle == index) {
-                            Color(0xFF1A1A1A)
-                        } else {
-                            Color(0xFF090909)
-                        },
-                        contentColor = if (selectedStyle == index) {
-                            Color.White
-                        } else {
-                            Color(0xFF8A8A8A)
-                        }
-                    ),
-                    contentPadding = PaddingValues(
-                        horizontal = 10.dp,
-                        vertical = 6.dp
-                    )
+            styles.chunked(4).forEach { rowStyles ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = label,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Light
-                    )
-                }
-
-                if (index != styles.lastIndex) {
-                    Spacer(modifier = Modifier.width(6.dp))
+                    rowStyles.forEach { style ->
+                        Button(
+                            modifier = Modifier.width(90.dp),
+                            onClick = {
+                                onStyleSelected(style)
+                            },
+                            shape = RoundedCornerShape(100.dp),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = if (selectedStyle == style) {
+                                    Color(0xFFBDBDBD)
+                                } else {
+                                    Color(0xFF242424)
+                                }
+                            ),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (selectedStyle == style) {
+                                    Color(0xFF1A1A1A)
+                                } else {
+                                    Color(0xFF090909)
+                                },
+                                contentColor = if (selectedStyle == style) {
+                                    Color.White
+                                } else {
+                                    Color(0xFF8A8A8A)
+                                }
+                            ),
+                            contentPadding = PaddingValues(
+                                horizontal = 6.dp,
+                                vertical = 6.dp
+                            )
+                        ) {
+                            Text(
+                                text = style.displayName,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Light,
+                                maxLines = 1
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -635,4 +653,67 @@ private fun formatTime(totalMinutes: Int): String {
     val minutes = totalMinutes % 60
 
     return "%02d:%02d".format(hours, minutes)
+}
+
+@Composable
+private fun ClockFontPicker(
+    selectedFont: ClockFont,
+    onFontSelected: (ClockFont) -> Unit
+) {
+    Column {
+        Text(
+            text = "Clock font",
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Light
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ClockFont.entries.forEach { font ->
+                Button(
+                    modifier = Modifier.width(90.dp),
+                    onClick = {
+                        onFontSelected(font)
+                    },
+                    shape = RoundedCornerShape(100.dp),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = if (selectedFont == font) {
+                            Color(0xFFBDBDBD)
+                        } else {
+                            Color(0xFF242424)
+                        }
+                    ),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (selectedFont == font) {
+                            Color(0xFF1A1A1A)
+                        } else {
+                            Color(0xFF090909)
+                        },
+                        contentColor = if (selectedFont == font) {
+                            Color.White
+                        } else {
+                            Color(0xFF8A8A8A)
+                        }
+                    ),
+                    contentPadding = PaddingValues(
+                        horizontal = 6.dp,
+                        vertical = 6.dp
+                    )
+                ) {
+                    Text(
+                        text = font.displayName,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Light,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
+    }
 }

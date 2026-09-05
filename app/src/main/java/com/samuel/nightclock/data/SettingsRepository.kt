@@ -3,6 +3,8 @@ package com.samuel.nightclock.data
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import com.samuel.nightclock.model.AlarmSound
+import com.samuel.nightclock.model.ClockStyle
+import com.samuel.nightclock.model.ClockFont
 import kotlinx.coroutines.flow.map
 
 class SettingsRepository(
@@ -26,7 +28,15 @@ class SettingsRepository(
     }
 
     val clockStyle = context.settingsDataStore.data.map { preferences ->
-        preferences[SettingsKeys.CLOCK_STYLE] ?: 0
+        ClockStyle.fromStorageValue(
+            preferences[SettingsKeys.CLOCK_STYLE] ?: 0
+        )
+    }
+
+    val clockFont = context.settingsDataStore.data.map { preferences ->
+        ClockFont.fromStorageValue(
+            preferences[SettingsKeys.CLOCK_FONT]
+        )
     }
 
     val accentColorIndex = context.settingsDataStore.data.map { preferences ->
@@ -99,9 +109,17 @@ class SettingsRepository(
         }
     }
 
-    suspend fun setClockStyle(style: Int) {
+    suspend fun setClockStyle(style: ClockStyle) {
         context.settingsDataStore.edit { preferences ->
-            preferences[SettingsKeys.CLOCK_STYLE] = style
+            preferences[SettingsKeys.CLOCK_STYLE] =
+                style.storageValue
+        }
+    }
+
+    suspend fun setClockFont(clockFont: ClockFont) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[SettingsKeys.CLOCK_FONT] =
+                clockFont.storageValue
         }
     }
 

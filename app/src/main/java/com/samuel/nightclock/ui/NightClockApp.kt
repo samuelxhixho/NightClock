@@ -65,7 +65,11 @@ fun NightClockApp(
     val batteryWarningEnabled by
     nightClockViewModel.batteryWarningEnabled.collectAsState()
 
-    val clockStyle by nightClockViewModel.clockStyle.collectAsState()
+    val clockStyle by
+    nightClockViewModel.clockStyleModel.collectAsState()
+
+    val clockFont by
+    nightClockViewModel.clockFont.collectAsState()
 
     val accentColorIndex by
     nightClockViewModel.accentColorIndex.collectAsState()
@@ -288,9 +292,12 @@ fun NightClockApp(
                 hourText = hourText,
                 minuteText = minuteText,
                 secondText = secondText,
+                hourValue = currentTime.hour,
+                minuteValue = currentTime.minute,
+                secondValue = currentTime.second,
                 dateText = dateText,
-                dimModeEnabled = effectiveDimMode,
                 clockStyle = clockStyle,
+                clockFont = clockFont,
                 appColors = appColors
             )
 
@@ -344,6 +351,7 @@ fun NightClockApp(
                         editingAutoDimTime = AutoDimTimeTarget.END
                     },
                     clockStyle = clockStyle,
+                    clockFont = clockFont,
                     accentColorIndex = accentColorIndex,
                     onAccentColorChange = { index ->
                         nightClockViewModel.setAccentColorIndex(index)
@@ -399,7 +407,10 @@ fun NightClockApp(
                     },
                     onClockStyleChange = { style ->
                         nightClockViewModel.setClockStyle(style)
-                    }
+                    },
+                    onClockFontChange = { font ->
+                        nightClockViewModel.setClockFont(font)
+                    },
                 )
             }
         }
