@@ -21,6 +21,9 @@ import com.samuel.nightclock.NightClockUiColors
 @Composable
 fun QuickTimerControls(
     modifier: Modifier = Modifier,
+    preset1Minutes: Int,
+    preset2Minutes: Int,
+    preset3Minutes: Int,
     appColors: NightClockUiColors,
     onStartTimer: (Int) -> Unit,
     onCustomTimer: () -> Unit
@@ -31,25 +34,31 @@ fun QuickTimerControls(
         verticalAlignment = Alignment.CenterVertically
     ) {
         TimerButton(
-            text = "5 min",
+            text = formatPresetLabel(preset1Minutes),
             appColors = appColors,
-            onClick = { onStartTimer(5) }
+            onClick = {
+                onStartTimer(preset1Minutes)
+            }
         )
 
         Spacer(modifier = Modifier.width(12.dp))
 
         TimerButton(
-            text = "15 min",
+            text = formatPresetLabel(preset2Minutes),
             appColors = appColors,
-            onClick = { onStartTimer(15) }
+            onClick = {
+                onStartTimer(preset2Minutes)
+            }
         )
 
         Spacer(modifier = Modifier.width(12.dp))
 
         TimerButton(
-            text = "30 min",
+            text = formatPresetLabel(preset3Minutes),
             appColors = appColors,
-            onClick = { onStartTimer(30) }
+            onClick = {
+                onStartTimer(preset3Minutes)
+            }
         )
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -89,5 +98,16 @@ private fun TimerButton(
             fontSize = 13.sp,
             fontWeight = FontWeight.Light
         )
+    }
+}
+
+private fun formatPresetLabel(totalMinutes: Int): String {
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+
+    return when {
+        hours == 0 -> "$minutes min"
+        minutes == 0 -> "${hours}h"
+        else -> "${hours}h ${minutes}m"
     }
 }

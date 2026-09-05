@@ -63,6 +63,24 @@ class NightClockViewModel(
         initialValue = 30
     )
 
+    val timerPreset1 = settingsRepository.timerPreset1.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = 5
+    )
+
+    val timerPreset2 = settingsRepository.timerPreset2.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = 15
+    )
+
+    val timerPreset3 = settingsRepository.timerPreset3.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = 30
+    )
+
     var timerSeconds by mutableIntStateOf(0)
         private set
 
@@ -149,6 +167,30 @@ class NightClockViewModel(
 
         viewModelScope.launch {
             settingsRepository.setCustomTimerMinutes(minutes)
+        }
+    }
+
+    fun setTimerPreset1(minutes: Int) {
+        if (minutes <= 0) return
+
+        viewModelScope.launch {
+            settingsRepository.setTimerPreset1(minutes)
+        }
+    }
+
+    fun setTimerPreset2(minutes: Int) {
+        if (minutes <= 0) return
+
+        viewModelScope.launch {
+            settingsRepository.setTimerPreset2(minutes)
+        }
+    }
+
+    fun setTimerPreset3(minutes: Int) {
+        if (minutes <= 0) return
+
+        viewModelScope.launch {
+            settingsRepository.setTimerPreset3(minutes)
         }
     }
 

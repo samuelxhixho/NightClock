@@ -9,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun DismissibleOverlay(
@@ -31,6 +33,7 @@ fun DismissibleOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.72f))
             .clickable(
                 interactionSource = backgroundInteractionSource,
                 indication = null,

@@ -34,6 +34,7 @@ import com.samuel.nightclock.ui.timer.TimerDoneScreen
 import com.samuel.nightclock.ui.timer.CustomTimerOverlay
 import com.samuel.nightclock.ui.timer.TimerRunningScreen
 import com.samuel.nightclock.viewmodel.NightClockViewModel
+import com.samuel.nightclock.ui.settings.PresetEditorOverlay
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -59,6 +60,15 @@ fun NightClockApp(
 
     val customTimerMinutes by
     nightClockViewModel.customTimerMinutes.collectAsState()
+
+    val timerPreset1 by
+    nightClockViewModel.timerPreset1.collectAsState()
+
+    val timerPreset2 by
+    nightClockViewModel.timerPreset2.collectAsState()
+
+    val timerPreset3 by
+    nightClockViewModel.timerPreset3.collectAsState()
 
     val powerManager = remember {
         context.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -86,6 +96,10 @@ fun NightClockApp(
 
     var showCustomTimer by remember {
         mutableStateOf(false)
+    }
+
+    var editingPresetIndex by remember {
+        mutableStateOf<Int?>(null)
     }
 
     LaunchedEffect(Unit) {
@@ -237,6 +251,9 @@ fun NightClockApp(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 28.dp),
+                    preset1Minutes = timerPreset1,
+                    preset2Minutes = timerPreset2,
+                    preset3Minutes = timerPreset3,
                     appColors = appColors,
                     onStartTimer = { minutes ->
                         nightClockViewModel.startTimer(minutes)
@@ -281,8 +298,52 @@ fun NightClockApp(
                     onClose = {
                         showSettings = false
                     },
+                    timerPreset1 = timerPreset1,
+                    timerPreset2 = timerPreset2,
+                    timerPreset3 = timerPreset3,
+                    onEditPreset1 = {
+                        showSettings = false
+                        editingPresetIndex = 1
+                    },
+                    onEditPreset2 = {
+                        editingPresetIndex = 2
+                    },
+                    onEditPreset3 = {
+                        editingPresetIndex = 3
+                    },
                     onClockStyleChange = { style ->
                         nightClockViewModel.setClockStyle(style)
+                    }
+                )
+            }
+        }
+
+        editingPresetIndex?.let { presetIndex ->
+            val currentPreset = when (presetIndex) {
+                1 -> timerPreset1
+                2 -> timerPreset2
+                else -> timerPreset3
+            }
+
+            DismissibleOverlay(
+                onDismiss = {
+                    editingPresetIndex = null
+                }
+            ) {
+                PresetEditorOverlay(
+                    initialMinutes = currentPreset,
+                    appColors = appColors,
+                    onSave = { minutes ->
+                        when (presetIndex) {
+                            1 -> nightClockViewModel.setTimerPreset1(minutes)
+                            2 -> nightClockViewModel.setTimerPreset2(minutes)
+                            3 -> nightClockViewModel.setTimerPreset3(minutes)
+                        }
+
+                        editingPresetIndex = null
+                    },
+                    onDismiss = {
+                        editingPresetIndex = null
                     }
                 )
             }

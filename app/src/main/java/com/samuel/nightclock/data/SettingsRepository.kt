@@ -36,6 +36,18 @@ class SettingsRepository(
         preferences[SettingsKeys.CUSTOM_TIMER_MINUTES] ?: 30
     }
 
+    val timerPreset1 = context.settingsDataStore.data.map { preferences ->
+        preferences[SettingsKeys.TIMER_PRESET_1] ?: 5
+    }
+
+    val timerPreset2 = context.settingsDataStore.data.map { preferences ->
+        preferences[SettingsKeys.TIMER_PRESET_2] ?: 15
+    }
+
+    val timerPreset3 = context.settingsDataStore.data.map { preferences ->
+        preferences[SettingsKeys.TIMER_PRESET_3] ?: 30
+    }
+
     suspend fun setSoundEnabled(enabled: Boolean) {
         context.settingsDataStore.edit { preferences ->
             preferences[SettingsKeys.SOUND_ENABLED] = enabled
@@ -75,6 +87,24 @@ class SettingsRepository(
     suspend fun setCustomTimerMinutes(minutes: Int) {
         context.settingsDataStore.edit { preferences ->
             preferences[SettingsKeys.CUSTOM_TIMER_MINUTES] = minutes
+        }
+    }
+
+    suspend fun setTimerPreset1(minutes: Int) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[SettingsKeys.TIMER_PRESET_1] = minutes
+        }
+    }
+
+    suspend fun setTimerPreset2(minutes: Int) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[SettingsKeys.TIMER_PRESET_2] = minutes
+        }
+    }
+
+    suspend fun setTimerPreset3(minutes: Int) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[SettingsKeys.TIMER_PRESET_3] = minutes
         }
     }
 }

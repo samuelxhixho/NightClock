@@ -47,6 +47,12 @@ fun SettingsOverlay(
     onClockStyleChange: (Int) -> Unit,
     accentColorIndex: Int,
     onAccentColorChange: (Int) -> Unit,
+    timerPreset1: Int,
+    timerPreset2: Int,
+    timerPreset3: Int,
+    onEditPreset1: () -> Unit,
+    onEditPreset2: () -> Unit,
+    onEditPreset3: () -> Unit,
     onClose: () -> Unit
 ) {
     Column(
@@ -101,6 +107,41 @@ fun SettingsOverlay(
             selectedAccentColor = accentColorIndex,
             onAccentColorSelected = onAccentColorChange
         )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Text(
+            text = "Quick timer presets",
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Light
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            PresetButton(
+                text = formatPresetLabel(timerPreset1),
+                onClick = onEditPreset1
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            PresetButton(
+                text = formatPresetLabel(timerPreset2),
+                onClick = onEditPreset2
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            PresetButton(
+                text = formatPresetLabel(timerPreset3),
+                onClick = onEditPreset3
+            )
+        }
 
         Spacer(modifier = Modifier.height(14.dp))
 
@@ -312,5 +353,41 @@ private fun SettingsRow(
             checked = checked,
             onCheckedChange = onCheckedChange
         )
+    }
+}
+
+@Composable
+private fun PresetButton(
+    text: String,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(100.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFF090909),
+            contentColor = Color.White
+        ),
+        contentPadding = PaddingValues(
+            horizontal = 14.dp,
+            vertical = 6.dp
+        )
+    ) {
+        Text(
+            text = text,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Light
+        )
+    }
+}
+
+private fun formatPresetLabel(totalMinutes: Int): String {
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+
+    return when {
+        hours == 0 -> "$minutes min"
+        minutes == 0 -> "${hours}h"
+        else -> "${hours}h ${minutes}m"
     }
 }
