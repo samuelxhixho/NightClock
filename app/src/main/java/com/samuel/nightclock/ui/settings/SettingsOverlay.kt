@@ -52,6 +52,12 @@ fun SettingsOverlay(
     onBatteryWarningChange: (Boolean) -> Unit,
     dimModeEnabled: Boolean,
     onDimModeChange: (Boolean) -> Unit,
+    autoDimEnabled: Boolean,
+    autoDimStartMinutes: Int,
+    autoDimEndMinutes: Int,
+    onAutoDimChange: (Boolean) -> Unit,
+    onEditAutoDimStart: () -> Unit,
+    onEditAutoDimEnd: () -> Unit,
     clockStyle: Int,
     onClockStyleChange: (Int) -> Unit,
     accentColorIndex: Int,
@@ -160,6 +166,26 @@ fun SettingsOverlay(
             checked = dimModeEnabled,
             onCheckedChange = onDimModeChange
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        SettingsRow(
+            title = "Auto dim",
+            subtitle = "Dim automatically on a schedule",
+            checked = autoDimEnabled,
+            onCheckedChange = onAutoDimChange
+        )
+
+        if (autoDimEnabled) {
+            Spacer(modifier = Modifier.height(8.dp))
+
+            AutoDimScheduleRow(
+                startMinutes = autoDimStartMinutes,
+                endMinutes = autoDimEndMinutes,
+                onEditStart = onEditAutoDimStart,
+                onEditEnd = onEditAutoDimEnd
+            )
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -540,4 +566,73 @@ private fun AlarmVolumeControl(
             valueRange = 0f..100f
         )
     }
+}
+
+@Composable
+private fun AutoDimScheduleRow(
+    startMinutes: Int,
+    endMinutes: Int,
+    onEditStart: () -> Unit,
+    onEditEnd: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = "Start",
+                color = Color(0xFF777777),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Light
+            )
+
+            TextButton(
+                onClick = onEditStart
+            ) {
+                Text(
+                    text = formatTime(startMinutes),
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Light
+                )
+            }
+        }
+
+        Text(
+            text = "→",
+            color = Color(0xFF666666),
+            fontSize = 18.sp
+        )
+
+        Column(
+            horizontalAlignment = Alignment.End
+        ) {
+            Text(
+                text = "End",
+                color = Color(0xFF777777),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Light
+            )
+
+            TextButton(
+                onClick = onEditEnd
+            ) {
+                Text(
+                    text = formatTime(endMinutes),
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Light
+                )
+            }
+        }
+    }
+}
+
+private fun formatTime(totalMinutes: Int): String {
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+
+    return "%02d:%02d".format(hours, minutes)
 }

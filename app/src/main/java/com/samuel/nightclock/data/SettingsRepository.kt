@@ -63,6 +63,18 @@ class SettingsRepository(
         preferences[SettingsKeys.GRADUAL_ALARM] ?: false
     }
 
+    val autoDimEnabled = context.settingsDataStore.data.map { preferences ->
+        preferences[SettingsKeys.AUTO_DIM_ENABLED] ?: false
+    }
+
+    val autoDimStartMinutes = context.settingsDataStore.data.map { preferences ->
+        preferences[SettingsKeys.AUTO_DIM_START_MINUTES] ?: (22 * 60)
+    }
+
+    val autoDimEndMinutes = context.settingsDataStore.data.map { preferences ->
+        preferences[SettingsKeys.AUTO_DIM_END_MINUTES] ?: (7 * 60)
+    }
+
     suspend fun setSoundEnabled(enabled: Boolean) {
         context.settingsDataStore.edit { preferences ->
             preferences[SettingsKeys.SOUND_ENABLED] = enabled
@@ -140,6 +152,26 @@ class SettingsRepository(
     suspend fun setGradualAlarmEnabled(enabled: Boolean) {
         context.settingsDataStore.edit { preferences ->
             preferences[SettingsKeys.GRADUAL_ALARM] = enabled
+        }
+    }
+
+    suspend fun setAutoDimEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[SettingsKeys.AUTO_DIM_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setAutoDimStartMinutes(minutes: Int) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[SettingsKeys.AUTO_DIM_START_MINUTES] =
+                minutes.coerceIn(0, 1439)
+        }
+    }
+
+    suspend fun setAutoDimEndMinutes(minutes: Int) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[SettingsKeys.AUTO_DIM_END_MINUTES] =
+                minutes.coerceIn(0, 1439)
         }
     }
 }

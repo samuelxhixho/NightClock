@@ -102,6 +102,26 @@ class NightClockViewModel(
             initialValue = false
         )
 
+    val autoDimEnabled = settingsRepository.autoDimEnabled.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = false
+    )
+
+    val autoDimStartMinutes =
+        settingsRepository.autoDimStartMinutes.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = 22 * 60
+        )
+
+    val autoDimEndMinutes =
+        settingsRepository.autoDimEndMinutes.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = 7 * 60
+        )
+
     var timerSeconds by mutableIntStateOf(0)
         private set
 
@@ -232,6 +252,28 @@ class NightClockViewModel(
     fun setGradualAlarmEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setGradualAlarmEnabled(enabled)
+        }
+    }
+
+    fun setAutoDimEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setAutoDimEnabled(enabled)
+        }
+    }
+
+    fun setAutoDimStartMinutes(minutes: Int) {
+        viewModelScope.launch {
+            settingsRepository.setAutoDimStartMinutes(
+                minutes.coerceIn(0, 1439)
+            )
+        }
+    }
+
+    fun setAutoDimEndMinutes(minutes: Int) {
+        viewModelScope.launch {
+            settingsRepository.setAutoDimEndMinutes(
+                minutes.coerceIn(0, 1439)
+            )
         }
     }
 

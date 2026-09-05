@@ -28,5 +28,9 @@ object SettingsKeys {
     val ALARM_VOLUME = intPreferencesKey("alarm_volume")
     val GRADUAL_ALARM = booleanPreferencesKey("gradual_alarm")
 
+    val AUTO_DIM_ENABLED = booleanPreferencesKey("auto_dim_enabled")
+    val AUTO_DIM_START_MINUTES = intPreferencesKey("auto_dim_start_minutes")
+    val AUTO_DIM_END_MINUTES = intPreferencesKey("auto_dim_end_minutes")
+
 }
 

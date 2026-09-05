@@ -36,6 +36,7 @@ import com.samuel.nightclock.ui.timer.TimerRunningScreen
 import com.samuel.nightclock.viewmodel.NightClockViewModel
 import com.samuel.nightclock.ui.settings.PresetEditorOverlay
 import com.samuel.nightclock.util.playTimerFinishedSound
+import com.samuel.nightclock.ui.settings.TimePickerOverlay
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -51,6 +52,15 @@ fun NightClockApp(
     val soundEnabled by nightClockViewModel.soundEnabled.collectAsState()
     val vibrationEnabled by nightClockViewModel.vibrationEnabled.collectAsState()
     val dimModeEnabled by nightClockViewModel.dimModeEnabled.collectAsState()
+
+    val autoDimEnabled by
+    nightClockViewModel.autoDimEnabled.collectAsState()
+
+    val autoDimStartMinutes by
+    nightClockViewModel.autoDimStartMinutes.collectAsState()
+
+    val autoDimEndMinutes by
+    nightClockViewModel.autoDimEndMinutes.collectAsState()
 
     val batteryWarningEnabled by
     nightClockViewModel.batteryWarningEnabled.collectAsState()
@@ -113,6 +123,10 @@ fun NightClockApp(
         mutableStateOf<Int?>(null)
     }
 
+    var editingAutoDimTime by remember {
+        mutableStateOf<AutoDimTimeTarget?>(null)
+    }
+
     LaunchedEffect(Unit) {
         while (true) {
             currentTime = LocalDateTime.now()
@@ -153,9 +167,23 @@ fun NightClockApp(
     val secondText =
         currentTime.format(DateTimeFormatter.ofPattern("ss"))
 
+    val currentMinutes =
+        currentTime.hour * 60 + currentTime.minute
+
+    val autoDimActive =
+        autoDimEnabled &&
+                isWithinAutoDimSchedule(
+                    currentMinutes = currentMinutes,
+                    startMinutes = autoDimStartMinutes,
+                    endMinutes = autoDimEndMinutes
+                )
+
+    val effectiveDimMode =
+        dimModeEnabled || autoDimActive
+
     val appColors = getNightClockUiColors(
         accentColorIndex = accentColorIndex,
-        dimModeEnabled = dimModeEnabled
+        dimModeEnabled = effectiveDimMode
     )
 
     Box(
@@ -163,7 +191,11 @@ fun NightClockApp(
             .fillMaxSize()
             .background(Color.Black)
             .clickable(
-                enabled = !showSettings && !showCustomTimer
+                enabled =
+                    !showSettings &&
+                            !showCustomTimer &&
+                            editingPresetIndex == null &&
+                            editingAutoDimTime == null
             ) {
                 if (
                     nightClockViewModel.timerSeconds == 0 &&
@@ -211,7 +243,7 @@ fun NightClockApp(
                 context = context,
                 soundEnabled = soundEnabled,
                 vibrationEnabled = vibrationEnabled,
-                dimModeEnabled = dimModeEnabled,
+                dimModeEnabled = effectiveDimMode,
                 appColors = appColors,
                 alarmSound = alarmSound,
                 alarmVolume = alarmVolume,
@@ -257,7 +289,7 @@ fun NightClockApp(
                 minuteText = minuteText,
                 secondText = secondText,
                 dateText = dateText,
-                dimModeEnabled = dimModeEnabled,
+                dimModeEnabled = effectiveDimMode,
                 clockStyle = clockStyle,
                 appColors = appColors
             )
@@ -297,6 +329,20 @@ fun NightClockApp(
                     vibrationEnabled = vibrationEnabled,
                     batteryWarningEnabled = batteryWarningEnabled,
                     dimModeEnabled = dimModeEnabled,
+                    autoDimEnabled = autoDimEnabled,
+                    autoDimStartMinutes = autoDimStartMinutes,
+                    autoDimEndMinutes = autoDimEndMinutes,
+                    onAutoDimChange = { enabled ->
+                        nightClockViewModel.setAutoDimEnabled(enabled)
+                    },
+                    onEditAutoDimStart = {
+                        showSettings = false
+                        editingAutoDimTime = AutoDimTimeTarget.START
+                    },
+                    onEditAutoDimEnd = {
+                        showSettings = false
+                        editingAutoDimTime = AutoDimTimeTarget.END
+                    },
                     clockStyle = clockStyle,
                     accentColorIndex = accentColorIndex,
                     onAccentColorChange = { index ->
@@ -343,9 +389,12 @@ fun NightClockApp(
                         editingPresetIndex = 1
                     },
                     onEditPreset2 = {
+                        showSettings = false
                         editingPresetIndex = 2
                     },
+
                     onEditPreset3 = {
+                        showSettings = false
                         editingPresetIndex = 3
                     },
                     onClockStyleChange = { style ->
@@ -386,6 +435,49 @@ fun NightClockApp(
             }
         }
 
+        editingAutoDimTime?.let { target ->
+            val initialMinutes = when (target) {
+                AutoDimTimeTarget.START ->
+                    autoDimStartMinutes
+
+                AutoDimTimeTarget.END ->
+                    autoDimEndMinutes
+            }
+
+            val title = when (target) {
+                AutoDimTimeTarget.START ->
+                    "Auto dim start"
+
+                AutoDimTimeTarget.END ->
+                    "Auto dim end"
+            }
+
+            DismissibleOverlay(
+                onDismiss = {
+                    editingAutoDimTime = null
+                }
+            ) {
+                TimePickerOverlay(
+                    title = title,
+                    initialMinutes = initialMinutes,
+                    appColors = appColors,
+                    onSave = { minutes ->
+                        when (target) {
+                            AutoDimTimeTarget.START ->
+                                nightClockViewModel
+                                    .setAutoDimStartMinutes(minutes)
+
+                            AutoDimTimeTarget.END ->
+                                nightClockViewModel
+                                    .setAutoDimEndMinutes(minutes)
+                        }
+
+                        editingAutoDimTime = null
+                    }
+                )
+            }
+        }
+
         if (showCustomTimer) {
             DismissibleOverlay(
                 onDismiss = {
@@ -420,4 +512,25 @@ private fun PowerSaverWarning(
         fontSize = 13.sp,
         fontWeight = FontWeight.Light
     )
+}
+
+private fun isWithinAutoDimSchedule(
+    currentMinutes: Int,
+    startMinutes: Int,
+    endMinutes: Int
+): Boolean {
+    return when {
+        startMinutes == endMinutes -> false
+
+        startMinutes < endMinutes ->
+            currentMinutes in startMinutes until endMinutes
+
+        else ->
+            currentMinutes !in endMinutes until startMinutes
+    }
+}
+
+private enum class AutoDimTimeTarget {
+    START,
+    END
 }
