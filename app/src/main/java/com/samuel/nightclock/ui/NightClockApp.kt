@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.samuel.nightclock.getNightClockUiColors
 import com.samuel.nightclock.ui.clock.ClockHomeScreen
 import com.samuel.nightclock.ui.components.DismissibleOverlay
+import com.samuel.nightclock.ui.onboarding.OnboardingScreen
 import com.samuel.nightclock.ui.settings.CustomAccentColorOverlay
 import com.samuel.nightclock.ui.settings.PresetEditorOverlay
 import com.samuel.nightclock.ui.settings.SettingsOverlay
@@ -78,6 +79,9 @@ fun NightClockApp(
     val customAccentColor by
     nightClockViewModel.customAccentColor.collectAsState()
 
+    val onboardingCompleted by
+    nightClockViewModel.onboardingCompleted.collectAsState()
+
     val alarmSound by
     nightClockViewModel.alarmSound.collectAsState()
 
@@ -98,6 +102,26 @@ fun NightClockApp(
 
     val timerPreset3 by
     nightClockViewModel.timerPreset3.collectAsState()
+
+    if (onboardingCompleted == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        )
+
+        return
+    }
+
+    if (onboardingCompleted == false) {
+        OnboardingScreen(
+            onFinish = {
+                nightClockViewModel.setOnboardingCompleted(true)
+            }
+        )
+
+        return
+    }
 
     val powerManager = remember {
         context.getSystemService(Context.POWER_SERVICE) as PowerManager

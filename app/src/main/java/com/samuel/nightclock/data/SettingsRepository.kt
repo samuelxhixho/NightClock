@@ -20,6 +20,11 @@ class SettingsRepository(
         preferences[SettingsKeys.VIBRATION_ENABLED] ?: true
     }
 
+    val onboardingCompleted =
+        context.settingsDataStore.data.map { preferences ->
+            preferences[SettingsKeys.ONBOARDING_COMPLETED] ?: false
+        }
+
     val batteryWarningEnabled = context.settingsDataStore.data.map { preferences ->
         preferences[SettingsKeys.BATTERY_WARNING_ENABLED] ?: true
     }
@@ -102,6 +107,15 @@ class SettingsRepository(
     suspend fun setVibrationEnabled(enabled: Boolean) {
         context.settingsDataStore.edit { preferences ->
             preferences[SettingsKeys.VIBRATION_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setOnboardingCompleted(
+        completed: Boolean
+    ) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[SettingsKeys.ONBOARDING_COMPLETED] =
+                completed
         }
     }
 

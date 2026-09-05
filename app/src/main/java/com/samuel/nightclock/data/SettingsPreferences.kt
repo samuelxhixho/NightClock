@@ -15,6 +15,9 @@ object SettingsKeys {
     val SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
     val VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
     val BATTERY_WARNING_ENABLED = booleanPreferencesKey("battery_warning_enabled")
+
+    val ONBOARDING_COMPLETED =
+        booleanPreferencesKey("onboarding_completed")
     val DIM_MODE_ENABLED = booleanPreferencesKey("dim_mode_enabled")
     val CLOCK_STYLE = intPreferencesKey("clock_style")
 

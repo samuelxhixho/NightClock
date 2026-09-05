@@ -17,6 +17,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.map
 import kotlin.time.Duration.Companion.seconds
 
 class NightClockViewModel(
@@ -37,6 +38,17 @@ class NightClockViewModel(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = true
     )
+
+    val onboardingCompleted =
+        settingsRepository.onboardingCompleted
+            .map<Boolean, Boolean?> { completed ->
+                completed
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = null
+            )
 
     val batteryWarningEnabled = settingsRepository.batteryWarningEnabled.stateIn(
         scope = viewModelScope,
@@ -193,6 +205,16 @@ class NightClockViewModel(
     fun setVibrationEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setVibrationEnabled(enabled)
+        }
+    }
+
+    fun setOnboardingCompleted(
+        completed: Boolean
+    ) {
+        viewModelScope.launch {
+            settingsRepository.setOnboardingCompleted(
+                completed
+            )
         }
     }
 
