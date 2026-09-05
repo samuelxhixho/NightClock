@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.samuel.nightclock.model.AlarmSound
 
 class NightClockViewModel(
     application: Application
@@ -79,6 +80,12 @@ class NightClockViewModel(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = 30
+    )
+
+    val alarmSound = settingsRepository.alarmSound.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = AlarmSound.SOFT
     )
 
     var timerSeconds by mutableIntStateOf(0)
@@ -191,6 +198,12 @@ class NightClockViewModel(
 
         viewModelScope.launch {
             settingsRepository.setTimerPreset3(minutes)
+        }
+    }
+
+    fun setAlarmSound(alarmSound: AlarmSound) {
+        viewModelScope.launch {
+            settingsRepository.setAlarmSound(alarmSound)
         }
     }
 

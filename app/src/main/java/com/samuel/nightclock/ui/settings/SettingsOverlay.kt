@@ -31,14 +31,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.samuel.nightclock.model.AlarmSound
 
 @Composable
 fun SettingsOverlay(
     modifier: Modifier = Modifier,
     soundEnabled: Boolean,
+    alarmSound: AlarmSound,
     vibrationEnabled: Boolean,
     batteryWarningEnabled: Boolean,
     onSoundChange: (Boolean) -> Unit,
+    onAlarmSoundChange: (AlarmSound) -> Unit,
+    onPreviewAlarmSound: () -> Unit,
     onVibrationChange: (Boolean) -> Unit,
     onBatteryWarningChange: (Boolean) -> Unit,
     dimModeEnabled: Boolean,
@@ -156,9 +160,17 @@ fun SettingsOverlay(
 
         SettingsRow(
             title = "Sound",
-            subtitle = "Soft alarm when timer ends",
+            subtitle = "Play alarm when timer ends",
             checked = soundEnabled,
             onCheckedChange = onSoundChange
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        AlarmSoundPicker(
+            selectedSound = alarmSound,
+            onSoundSelected = onAlarmSoundChange,
+            onPreview = onPreviewAlarmSound
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -389,5 +401,84 @@ private fun formatPresetLabel(totalMinutes: Int): String {
         hours == 0 -> "$minutes min"
         minutes == 0 -> "${hours}h"
         else -> "${hours}h ${minutes}m"
+    }
+}
+
+@Composable
+private fun AlarmSoundPicker(
+    selectedSound: AlarmSound,
+    onSoundSelected: (AlarmSound) -> Unit,
+    onPreview: () -> Unit
+) {
+    Column {
+        Text(
+            text = "Alarm sound",
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Light
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AlarmSound.entries.forEachIndexed { index, sound ->
+                Button(
+                    onClick = {
+                        onSoundSelected(sound)
+                    },
+                    shape = RoundedCornerShape(100.dp),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = if (selectedSound == sound) {
+                            Color(0xFFBDBDBD)
+                        } else {
+                            Color(0xFF242424)
+                        }
+                    ),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (selectedSound == sound) {
+                            Color(0xFF1A1A1A)
+                        } else {
+                            Color(0xFF090909)
+                        },
+                        contentColor = if (selectedSound == sound) {
+                            Color.White
+                        } else {
+                            Color(0xFF8A8A8A)
+                        }
+                    ),
+                    contentPadding = PaddingValues(
+                        horizontal = 10.dp,
+                        vertical = 6.dp
+                    )
+                ) {
+                    Text(
+                        text = sound.displayName,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Light
+                    )
+                }
+
+                if (index != AlarmSound.entries.lastIndex) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        TextButton(
+            onClick = onPreview
+        ) {
+            Text(
+                text = "Preview",
+                color = Color(0xFFBDBDBD),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Light
+            )
+        }
     }
 }

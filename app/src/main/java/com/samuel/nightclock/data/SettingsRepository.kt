@@ -2,6 +2,7 @@ package com.samuel.nightclock.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
+import com.samuel.nightclock.model.AlarmSound
 import kotlinx.coroutines.flow.map
 
 class SettingsRepository(
@@ -46,6 +47,12 @@ class SettingsRepository(
 
     val timerPreset3 = context.settingsDataStore.data.map { preferences ->
         preferences[SettingsKeys.TIMER_PRESET_3] ?: 30
+    }
+
+    val alarmSound = context.settingsDataStore.data.map { preferences ->
+        AlarmSound.fromStorageValue(
+            preferences[SettingsKeys.ALARM_SOUND]
+        )
     }
 
     suspend fun setSoundEnabled(enabled: Boolean) {
@@ -105,6 +112,13 @@ class SettingsRepository(
     suspend fun setTimerPreset3(minutes: Int) {
         context.settingsDataStore.edit { preferences ->
             preferences[SettingsKeys.TIMER_PRESET_3] = minutes
+        }
+    }
+
+    suspend fun setAlarmSound(alarmSound: AlarmSound) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[SettingsKeys.ALARM_SOUND] =
+                alarmSound.storageValue
         }
     }
 }

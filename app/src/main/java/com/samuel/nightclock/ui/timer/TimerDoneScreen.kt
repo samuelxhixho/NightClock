@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.samuel.nightclock.NightClockUiColors
 import com.samuel.nightclock.util.playTimerFinishedSound
 import com.samuel.nightclock.util.vibrateTimerFinished
+import com.samuel.nightclock.model.AlarmSound
 
 @Composable
 fun TimerDoneScreen(
@@ -28,6 +29,7 @@ fun TimerDoneScreen(
     currentTimeText: String,
     context: Context,
     soundEnabled: Boolean,
+    alarmSound: AlarmSound,
     vibrationEnabled: Boolean,
     dimModeEnabled: Boolean,
     appColors: NightClockUiColors,
@@ -39,7 +41,10 @@ fun TimerDoneScreen(
         }
 
         if (soundEnabled) {
-            playTimerFinishedSound()
+            playTimerFinishedSound(
+                context = context,
+                alarmSound = alarmSound
+            )
         }
     }
 

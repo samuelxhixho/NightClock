@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.datastore.preferences.core.stringPreferencesKey
 
 val Context.settingsDataStore by preferencesDataStore(
     name = "night_clock_settings"
@@ -21,4 +22,8 @@ object SettingsKeys {
     val TIMER_PRESET_1 = intPreferencesKey("timer_preset_1")
     val TIMER_PRESET_2 = intPreferencesKey("timer_preset_2")
     val TIMER_PRESET_3 = intPreferencesKey("timer_preset_3")
+
+    val ALARM_SOUND = stringPreferencesKey("alarm_sound")
+
 }
+

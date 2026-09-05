@@ -35,6 +35,7 @@ import com.samuel.nightclock.ui.timer.CustomTimerOverlay
 import com.samuel.nightclock.ui.timer.TimerRunningScreen
 import com.samuel.nightclock.viewmodel.NightClockViewModel
 import com.samuel.nightclock.ui.settings.PresetEditorOverlay
+import com.samuel.nightclock.util.playTimerFinishedSound
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -57,6 +58,9 @@ fun NightClockApp(
 
     val accentColorIndex by
     nightClockViewModel.accentColorIndex.collectAsState()
+
+    val alarmSound by
+    nightClockViewModel.alarmSound.collectAsState()
 
     val customTimerMinutes by
     nightClockViewModel.customTimerMinutes.collectAsState()
@@ -202,6 +206,7 @@ fun NightClockApp(
                 vibrationEnabled = vibrationEnabled,
                 dimModeEnabled = dimModeEnabled,
                 appColors = appColors,
+                alarmSound = alarmSound,
                 onDismiss = {
                     nightClockViewModel.dismissFinishedTimer()
                     showTimerControls = false
@@ -275,6 +280,7 @@ fun NightClockApp(
             ) {
                 SettingsOverlay(
                     soundEnabled = soundEnabled,
+                    alarmSound = alarmSound,
                     vibrationEnabled = vibrationEnabled,
                     batteryWarningEnabled = batteryWarningEnabled,
                     dimModeEnabled = dimModeEnabled,
@@ -285,6 +291,15 @@ fun NightClockApp(
                     },
                     onSoundChange = { enabled ->
                         nightClockViewModel.setSoundEnabled(enabled)
+                    },
+                    onAlarmSoundChange = { sound ->
+                        nightClockViewModel.setAlarmSound(sound)
+                    },
+                    onPreviewAlarmSound = {
+                        playTimerFinishedSound(
+                            context = context,
+                            alarmSound = alarmSound
+                        )
                     },
                     onVibrationChange = { enabled ->
                         nightClockViewModel.setVibrationEnabled(enabled)
