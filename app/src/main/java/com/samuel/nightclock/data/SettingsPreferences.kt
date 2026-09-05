@@ -16,4 +16,6 @@ object SettingsKeys {
     val DIM_MODE_ENABLED = booleanPreferencesKey("dim_mode_enabled")
     val CLOCK_STYLE = intPreferencesKey("clock_style")
     val ACCENT_COLOR = intPreferencesKey("accent_color")
+
+    val CUSTOM_TIMER_MINUTES = intPreferencesKey("custom_timer_minutes")
 }

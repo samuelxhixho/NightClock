@@ -32,6 +32,10 @@ class SettingsRepository(
         preferences[SettingsKeys.ACCENT_COLOR] ?: 0
     }
 
+    val customTimerMinutes = context.settingsDataStore.data.map { preferences ->
+        preferences[SettingsKeys.CUSTOM_TIMER_MINUTES] ?: 30
+    }
+
     suspend fun setSoundEnabled(enabled: Boolean) {
         context.settingsDataStore.edit { preferences ->
             preferences[SettingsKeys.SOUND_ENABLED] = enabled
@@ -65,6 +69,12 @@ class SettingsRepository(
     suspend fun setAccentColorIndex(index: Int) {
         context.settingsDataStore.edit { preferences ->
             preferences[SettingsKeys.ACCENT_COLOR] = index
+        }
+    }
+
+    suspend fun setCustomTimerMinutes(minutes: Int) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[SettingsKeys.CUSTOM_TIMER_MINUTES] = minutes
         }
     }
 }

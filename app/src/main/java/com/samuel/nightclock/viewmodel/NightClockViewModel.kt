@@ -57,6 +57,12 @@ class NightClockViewModel(
         initialValue = 0
     )
 
+    val customTimerMinutes = settingsRepository.customTimerMinutes.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = 30
+    )
+
     var timerSeconds by mutableIntStateOf(0)
         private set
 
@@ -135,6 +141,14 @@ class NightClockViewModel(
     fun setAccentColorIndex(index: Int) {
         viewModelScope.launch {
             settingsRepository.setAccentColorIndex(index)
+        }
+    }
+
+    fun setCustomTimerMinutes(minutes: Int) {
+        if (minutes <= 0) return
+
+        viewModelScope.launch {
+            settingsRepository.setCustomTimerMinutes(minutes)
         }
     }
 

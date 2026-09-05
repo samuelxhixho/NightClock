@@ -22,8 +22,9 @@ import com.samuel.nightclock.NightClockUiColors
 fun QuickTimerControls(
     modifier: Modifier = Modifier,
     appColors: NightClockUiColors,
-    onStartTimer: (Int) -> Unit
-) {
+    onStartTimer: (Int) -> Unit,
+    onCustomTimer: () -> Unit
+){
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.Center,
@@ -49,6 +50,14 @@ fun QuickTimerControls(
             text = "30 min",
             appColors = appColors,
             onClick = { onStartTimer(30) }
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        TimerButton(
+            text = "Custom",
+            appColors = appColors,
+            onClick = onCustomTimer
         )
     }
 }

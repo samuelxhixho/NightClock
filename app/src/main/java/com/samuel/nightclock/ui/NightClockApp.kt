@@ -28,8 +28,10 @@ import androidx.compose.ui.unit.sp
 import com.samuel.nightclock.getNightClockUiColors
 import com.samuel.nightclock.ui.clock.ClockHomeScreen
 import com.samuel.nightclock.ui.settings.SettingsOverlay
+import com.samuel.nightclock.ui.components.DismissibleOverlay
 import com.samuel.nightclock.ui.timer.QuickTimerControls
 import com.samuel.nightclock.ui.timer.TimerDoneScreen
+import com.samuel.nightclock.ui.timer.CustomTimerOverlay
 import com.samuel.nightclock.ui.timer.TimerRunningScreen
 import com.samuel.nightclock.viewmodel.NightClockViewModel
 import kotlinx.coroutines.delay
@@ -55,6 +57,9 @@ fun NightClockApp(
     val accentColorIndex by
     nightClockViewModel.accentColorIndex.collectAsState()
 
+    val customTimerMinutes by
+    nightClockViewModel.customTimerMinutes.collectAsState()
+
     val powerManager = remember {
         context.getSystemService(Context.POWER_SERVICE) as PowerManager
     }
@@ -76,6 +81,10 @@ fun NightClockApp(
     }
 
     var showSettings by remember {
+        mutableStateOf(false)
+    }
+
+    var showCustomTimer by remember {
         mutableStateOf(false)
     }
 
@@ -128,7 +137,9 @@ fun NightClockApp(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .clickable(enabled = !showSettings) {
+            .clickable(
+                enabled = !showSettings && !showCustomTimer
+            ) {
                 if (
                     nightClockViewModel.timerSeconds == 0 &&
                     !nightClockViewModel.timerFinished
@@ -147,7 +158,8 @@ fun NightClockApp(
 
         if (
             nightClockViewModel.timerSeconds == 0 &&
-            !nightClockViewModel.timerFinished
+            !nightClockViewModel.timerFinished &&
+            !showCustomTimer
         ) {
             TextButton(
                 modifier = Modifier
@@ -229,42 +241,72 @@ fun NightClockApp(
                     onStartTimer = { minutes ->
                         nightClockViewModel.startTimer(minutes)
                         showTimerControls = false
+                    },
+                    onCustomTimer = {
+                        showTimerControls = false
+                        showCustomTimer = true
                     }
                 )
             }
         }
 
         if (showSettings) {
-            SettingsOverlay(
-                modifier = Modifier.align(Alignment.Center),
-                soundEnabled = soundEnabled,
-                vibrationEnabled = vibrationEnabled,
-                batteryWarningEnabled = batteryWarningEnabled,
-                dimModeEnabled = dimModeEnabled,
-                clockStyle = clockStyle,
-                accentColorIndex = accentColorIndex,
-                onAccentColorChange = { index ->
-                    nightClockViewModel.setAccentColorIndex(index)
-                },
-                onSoundChange = { enabled ->
-                    nightClockViewModel.setSoundEnabled(enabled)
-                },
-                onVibrationChange = { enabled ->
-                    nightClockViewModel.setVibrationEnabled(enabled)
-                },
-                onBatteryWarningChange = { enabled ->
-                    nightClockViewModel.setBatteryWarningEnabled(enabled)
-                },
-                onDimModeChange = { enabled ->
-                    nightClockViewModel.setDimModeEnabled(enabled)
-                },
-                onClose = {
+            DismissibleOverlay(
+                onDismiss = {
                     showSettings = false
-                },
-                onClockStyleChange = { style ->
-                    nightClockViewModel.setClockStyle(style)
                 }
-            )
+            ) {
+                SettingsOverlay(
+                    soundEnabled = soundEnabled,
+                    vibrationEnabled = vibrationEnabled,
+                    batteryWarningEnabled = batteryWarningEnabled,
+                    dimModeEnabled = dimModeEnabled,
+                    clockStyle = clockStyle,
+                    accentColorIndex = accentColorIndex,
+                    onAccentColorChange = { index ->
+                        nightClockViewModel.setAccentColorIndex(index)
+                    },
+                    onSoundChange = { enabled ->
+                        nightClockViewModel.setSoundEnabled(enabled)
+                    },
+                    onVibrationChange = { enabled ->
+                        nightClockViewModel.setVibrationEnabled(enabled)
+                    },
+                    onBatteryWarningChange = { enabled ->
+                        nightClockViewModel.setBatteryWarningEnabled(enabled)
+                    },
+                    onDimModeChange = { enabled ->
+                        nightClockViewModel.setDimModeEnabled(enabled)
+                    },
+                    onClose = {
+                        showSettings = false
+                    },
+                    onClockStyleChange = { style ->
+                        nightClockViewModel.setClockStyle(style)
+                    }
+                )
+            }
+        }
+
+        if (showCustomTimer) {
+            DismissibleOverlay(
+                onDismiss = {
+                    showCustomTimer = false
+                }
+            ) {
+                CustomTimerOverlay(
+                    initialMinutes = customTimerMinutes,
+                    appColors = appColors,
+                    onStart = { minutes ->
+                        nightClockViewModel.setCustomTimerMinutes(minutes)
+                        nightClockViewModel.startTimer(minutes)
+                        showCustomTimer = false
+                    },
+                    onClose = {
+                        showCustomTimer = false
+                    }
+                )
+            }
         }
     }
 }

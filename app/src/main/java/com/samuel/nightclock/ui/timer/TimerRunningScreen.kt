@@ -186,8 +186,20 @@ private fun LargeRadialTimer(
 }
 
 private fun formatTimer(seconds: Int): String {
-    val minutes = seconds / 60
+    val hours = seconds / 3600
+    val minutes = (seconds % 3600) / 60
     val remainingSeconds = seconds % 60
 
-    return "%02d:%02d".format(minutes, remainingSeconds)
+    return if (hours > 0) {
+        "%02d:%02d:%02d".format(
+            hours,
+            minutes,
+            remainingSeconds
+        )
+    } else {
+        "%02d:%02d".format(
+            minutes,
+            remainingSeconds
+        )
+    }
 }
