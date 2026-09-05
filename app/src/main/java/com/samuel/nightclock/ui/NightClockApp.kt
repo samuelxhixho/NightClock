@@ -40,6 +40,7 @@ import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun NightClockApp(
@@ -61,6 +62,12 @@ fun NightClockApp(
 
     val alarmSound by
     nightClockViewModel.alarmSound.collectAsState()
+
+    val alarmVolume by
+    nightClockViewModel.alarmVolume.collectAsState()
+
+    val gradualAlarmEnabled by
+    nightClockViewModel.gradualAlarmEnabled.collectAsState()
 
     val customTimerMinutes by
     nightClockViewModel.customTimerMinutes.collectAsState()
@@ -109,13 +116,13 @@ fun NightClockApp(
     LaunchedEffect(Unit) {
         while (true) {
             currentTime = LocalDateTime.now()
-            delay(1000)
+            delay(1.seconds)
         }
     }
 
     LaunchedEffect(Unit) {
         while (true) {
-            delay(60_000)
+            delay(60.seconds)
 
             burnInOffset = IntOffset(
                 x = Random.nextInt(-8, 9),
@@ -127,7 +134,7 @@ fun NightClockApp(
     LaunchedEffect(Unit) {
         while (true) {
             isPowerSaveMode = powerManager.isPowerSaveMode
-            delay(2000)
+            delay(2.seconds)
         }
     }
 
@@ -207,6 +214,8 @@ fun NightClockApp(
                 dimModeEnabled = dimModeEnabled,
                 appColors = appColors,
                 alarmSound = alarmSound,
+                alarmVolume = alarmVolume,
+                gradualAlarmEnabled = gradualAlarmEnabled,
                 onDismiss = {
                     nightClockViewModel.dismissFinishedTimer()
                     showTimerControls = false
@@ -233,14 +242,16 @@ fun NightClockApp(
             ClockHomeScreen(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .offset(
-                        x = burnInOffset.x.dp,
-                        y = if (showTimerControls) {
-                            (-44).dp
-                        } else {
-                            burnInOffset.y.dp
-                        }
-                    ),
+                    .offset {
+                        IntOffset(
+                            x = burnInOffset.x,
+                            y = if (showTimerControls) {
+                                (-44).dp.roundToPx()
+                            } else {
+                                burnInOffset.y
+                            }
+                        )
+                    },
                 timeText = timeText,
                 hourText = hourText,
                 minuteText = minuteText,
@@ -281,6 +292,8 @@ fun NightClockApp(
                 SettingsOverlay(
                     soundEnabled = soundEnabled,
                     alarmSound = alarmSound,
+                    alarmVolume = alarmVolume,
+                    gradualAlarmEnabled = gradualAlarmEnabled,
                     vibrationEnabled = vibrationEnabled,
                     batteryWarningEnabled = batteryWarningEnabled,
                     dimModeEnabled = dimModeEnabled,
@@ -298,8 +311,17 @@ fun NightClockApp(
                     onPreviewAlarmSound = {
                         playTimerFinishedSound(
                             context = context,
-                            alarmSound = alarmSound
+                            alarmSound = alarmSound,
+                            volumePercent = alarmVolume,
+                            gradualAlarmEnabled = gradualAlarmEnabled,
+                            loop = false
                         )
+                    },
+                    onAlarmVolumeChange = { volume ->
+                        nightClockViewModel.setAlarmVolume(volume)
+                    },
+                    onGradualAlarmChange = { enabled ->
+                        nightClockViewModel.setGradualAlarmEnabled(enabled)
                     },
                     onVibrationChange = { enabled ->
                         nightClockViewModel.setVibrationEnabled(enabled)

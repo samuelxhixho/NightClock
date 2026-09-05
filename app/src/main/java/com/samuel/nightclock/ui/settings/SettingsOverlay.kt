@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.Slider
 import com.samuel.nightclock.model.AlarmSound
 
 @Composable
@@ -38,11 +39,15 @@ fun SettingsOverlay(
     modifier: Modifier = Modifier,
     soundEnabled: Boolean,
     alarmSound: AlarmSound,
+    alarmVolume: Int,
+    gradualAlarmEnabled: Boolean,
     vibrationEnabled: Boolean,
     batteryWarningEnabled: Boolean,
     onSoundChange: (Boolean) -> Unit,
     onAlarmSoundChange: (AlarmSound) -> Unit,
     onPreviewAlarmSound: () -> Unit,
+    onAlarmVolumeChange: (Int) -> Unit,
+    onGradualAlarmChange: (Boolean) -> Unit,
     onVibrationChange: (Boolean) -> Unit,
     onBatteryWarningChange: (Boolean) -> Unit,
     dimModeEnabled: Boolean,
@@ -171,6 +176,22 @@ fun SettingsOverlay(
             selectedSound = alarmSound,
             onSoundSelected = onAlarmSoundChange,
             onPreview = onPreviewAlarmSound
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        AlarmVolumeControl(
+            volume = alarmVolume,
+            onVolumeChange = onAlarmVolumeChange
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        SettingsRow(
+            title = "Gradual alarm",
+            subtitle = "Fade in alarm volume gradually",
+            checked = gradualAlarmEnabled,
+            onCheckedChange = onGradualAlarmChange
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -480,5 +501,43 @@ private fun AlarmSoundPicker(
                 fontWeight = FontWeight.Light
             )
         }
+    }
+}
+
+@Composable
+private fun AlarmVolumeControl(
+    volume: Int,
+    onVolumeChange: (Int) -> Unit
+) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Alarm volume",
+                color = Color.White,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Light
+            )
+
+            Text(
+                text = "$volume%",
+                color = Color(0xFF8A8A8A),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Light
+            )
+        }
+
+        Slider(
+            value = volume.toFloat(),
+            onValueChange = { newValue ->
+                onVolumeChange(
+                    newValue.toInt().coerceIn(0, 100)
+                )
+            },
+            valueRange = 0f..100f
+        )
     }
 }

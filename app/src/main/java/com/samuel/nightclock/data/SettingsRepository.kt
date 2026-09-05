@@ -55,6 +55,14 @@ class SettingsRepository(
         )
     }
 
+    val alarmVolume = context.settingsDataStore.data.map { preferences ->
+        preferences[SettingsKeys.ALARM_VOLUME] ?: 100
+    }
+
+    val gradualAlarmEnabled = context.settingsDataStore.data.map { preferences ->
+        preferences[SettingsKeys.GRADUAL_ALARM] ?: false
+    }
+
     suspend fun setSoundEnabled(enabled: Boolean) {
         context.settingsDataStore.edit { preferences ->
             preferences[SettingsKeys.SOUND_ENABLED] = enabled
@@ -119,6 +127,19 @@ class SettingsRepository(
         context.settingsDataStore.edit { preferences ->
             preferences[SettingsKeys.ALARM_SOUND] =
                 alarmSound.storageValue
+        }
+    }
+
+    suspend fun setAlarmVolume(volume: Int) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[SettingsKeys.ALARM_VOLUME] =
+                volume.coerceIn(0, 100)
+        }
+    }
+
+    suspend fun setGradualAlarmEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[SettingsKeys.GRADUAL_ALARM] = enabled
         }
     }
 }

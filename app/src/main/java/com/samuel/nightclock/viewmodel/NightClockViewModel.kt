@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 import com.samuel.nightclock.model.AlarmSound
 
 class NightClockViewModel(
@@ -87,6 +88,19 @@ class NightClockViewModel(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = AlarmSound.SOFT
     )
+
+    val alarmVolume = settingsRepository.alarmVolume.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = 100
+    )
+
+    val gradualAlarmEnabled =
+        settingsRepository.gradualAlarmEnabled.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = false
+        )
 
     var timerSeconds by mutableIntStateOf(0)
         private set
@@ -207,10 +221,24 @@ class NightClockViewModel(
         }
     }
 
+    fun setAlarmVolume(volume: Int) {
+        viewModelScope.launch {
+            settingsRepository.setAlarmVolume(
+                volume.coerceIn(0, 100)
+            )
+        }
+    }
+
+    fun setGradualAlarmEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setGradualAlarmEnabled(enabled)
+        }
+    }
+
     private fun startCountdown() {
         countdownJob = viewModelScope.launch {
             while (timerSeconds > 0) {
-                delay(1000)
+                delay(1.seconds)
 
                 if (isTimerRunning) {
                     tickTimer()

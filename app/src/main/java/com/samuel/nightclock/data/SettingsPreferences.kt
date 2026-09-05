@@ -25,5 +25,8 @@ object SettingsKeys {
 
     val ALARM_SOUND = stringPreferencesKey("alarm_sound")
 
+    val ALARM_VOLUME = intPreferencesKey("alarm_volume")
+    val GRADUAL_ALARM = booleanPreferencesKey("gradual_alarm")
+
 }
 

@@ -7,6 +7,12 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 import com.samuel.nightclock.R
 import com.samuel.nightclock.model.AlarmSound
 
@@ -23,28 +29,24 @@ fun vibrateTimerFinished(context: Context) {
 
     if (!vibrator.hasVibrator()) return
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        vibrator.vibrate(
-            VibrationEffect.createWaveform(
-                longArrayOf(0, 600, 200, 600, 200, 900),
-                intArrayOf(0, 255, 0, 255, 0, 255),
-                -1
-            )
-        )
-    } else {
-        @Suppress("DEPRECATION")
-        vibrator.vibrate(
-            longArrayOf(0, 600, 200, 600, 200, 900),
+    vibrator.vibrate(
+        VibrationEffect.createWaveform(
+            longArrayOf(0, 250, 150, 250),
             -1
         )
-    }
+    )
 }
 
 private var activeAlarmPlayer: MediaPlayer? = null
 
+private var activeVolumeJob: Job? = null
+
 fun playTimerFinishedSound(
     context: Context,
-    alarmSound: AlarmSound
+    alarmSound: AlarmSound,
+    volumePercent: Int,
+    gradualAlarmEnabled: Boolean,
+    loop: Boolean
 ) {
     stopTimerFinishedSound()
 
@@ -65,7 +67,24 @@ fun playTimerFinishedSound(
 
     val mediaPlayer = MediaPlayer()
 
+    val volume = volumePercent
+        .coerceIn(0, 100) / 100f
+
     mediaPlayer.setAudioAttributes(audioAttributes)
+
+    mediaPlayer.isLooping = loop
+
+    if (gradualAlarmEnabled) {
+        mediaPlayer.setVolume(
+            0f,
+            0f
+        )
+    } else {
+        mediaPlayer.setVolume(
+            volume,
+            volume
+        )
+    }
 
     mediaPlayer.setDataSource(
         assetFileDescriptor.fileDescriptor,
@@ -88,9 +107,39 @@ fun playTimerFinishedSound(
     activeAlarmPlayer = mediaPlayer
 
     mediaPlayer.start()
+
+    if (gradualAlarmEnabled && volume > 0f) {
+        activeVolumeJob = CoroutineScope(Dispatchers.Main).launch {
+            val steps = 40
+            val stepDelayMillis = 8_000L / steps
+
+            repeat(steps) { index ->
+                if (activeAlarmPlayer !== mediaPlayer) {
+                    return@launch
+                }
+
+                val progress =
+                    (index + 1).toFloat() / steps
+
+                val currentVolume =
+                    volume * progress
+
+                mediaPlayer.setVolume(
+                    currentVolume,
+                    currentVolume
+                )
+
+                delay(stepDelayMillis.milliseconds)
+            }
+        }
+    }
 }
 
 fun stopTimerFinishedSound() {
+
+    activeVolumeJob?.cancel()
+    activeVolumeJob = null
+
     activeAlarmPlayer?.let { mediaPlayer ->
         runCatching {
             if (mediaPlayer.isPlaying) {

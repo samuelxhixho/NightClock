@@ -18,10 +18,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.DisposableEffect
 import com.samuel.nightclock.NightClockUiColors
 import com.samuel.nightclock.util.playTimerFinishedSound
 import com.samuel.nightclock.util.vibrateTimerFinished
 import com.samuel.nightclock.model.AlarmSound
+import com.samuel.nightclock.util.stopTimerFinishedSound
 
 @Composable
 fun TimerDoneScreen(
@@ -30,6 +32,8 @@ fun TimerDoneScreen(
     context: Context,
     soundEnabled: Boolean,
     alarmSound: AlarmSound,
+    alarmVolume: Int,
+    gradualAlarmEnabled: Boolean,
     vibrationEnabled: Boolean,
     dimModeEnabled: Boolean,
     appColors: NightClockUiColors,
@@ -43,8 +47,16 @@ fun TimerDoneScreen(
         if (soundEnabled) {
             playTimerFinishedSound(
                 context = context,
-                alarmSound = alarmSound
+                alarmSound = alarmSound,
+                volumePercent = alarmVolume,
+                gradualAlarmEnabled = gradualAlarmEnabled,
+                loop = true
             )
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            stopTimerFinishedSound()
         }
     }
 
