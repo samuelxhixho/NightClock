@@ -1,0 +1,165 @@
+package com.samuel.nightclock.viewmodel
+
+import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.samuel.nightclock.data.SettingsRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+class NightClockViewModel(
+    application: Application
+) : AndroidViewModel(application) {
+
+    private val settingsRepository =
+        SettingsRepository(application.applicationContext)
+
+    val soundEnabled = settingsRepository.soundEnabled.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = true
+    )
+
+    val vibrationEnabled = settingsRepository.vibrationEnabled.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = true
+    )
+
+    val batteryWarningEnabled = settingsRepository.batteryWarningEnabled.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = true
+    )
+
+    val dimModeEnabled = settingsRepository.dimModeEnabled.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = false
+    )
+
+    val clockStyle = settingsRepository.clockStyle.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = 0
+    )
+
+    val accentColorIndex = settingsRepository.accentColorIndex.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = 0
+    )
+
+    var timerSeconds by mutableIntStateOf(0)
+        private set
+
+    var totalTimerSeconds by mutableIntStateOf(0)
+        private set
+
+    var isTimerRunning by mutableStateOf(false)
+        private set
+
+    var timerFinished by mutableStateOf(false)
+        private set
+
+    private var countdownJob: Job? = null
+
+    fun startTimer(minutes: Int) {
+        countdownJob?.cancel()
+
+        timerFinished = false
+        timerSeconds = minutes * 60
+        totalTimerSeconds = minutes * 60
+        isTimerRunning = true
+
+        startCountdown()
+    }
+
+    fun togglePause() {
+        if (timerSeconds <= 0 || timerFinished) return
+
+        isTimerRunning = !isTimerRunning
+    }
+
+    fun resetTimer() {
+        countdownJob?.cancel()
+        countdownJob = null
+
+        timerFinished = false
+        timerSeconds = 0
+        totalTimerSeconds = 0
+        isTimerRunning = false
+    }
+
+    fun dismissFinishedTimer() {
+        resetTimer()
+    }
+
+    fun setSoundEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setSoundEnabled(enabled)
+        }
+    }
+
+    fun setVibrationEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setVibrationEnabled(enabled)
+        }
+    }
+
+    fun setBatteryWarningEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setBatteryWarningEnabled(enabled)
+        }
+    }
+
+    fun setDimModeEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setDimModeEnabled(enabled)
+        }
+    }
+
+    fun setClockStyle(style: Int) {
+        viewModelScope.launch {
+            settingsRepository.setClockStyle(style)
+        }
+    }
+
+    fun setAccentColorIndex(index: Int) {
+        viewModelScope.launch {
+            settingsRepository.setAccentColorIndex(index)
+        }
+    }
+
+    private fun startCountdown() {
+        countdownJob = viewModelScope.launch {
+            while (timerSeconds > 0) {
+                delay(1000)
+
+                if (isTimerRunning) {
+                    tickTimer()
+                }
+            }
+        }
+    }
+
+    private fun tickTimer() {
+        if (timerSeconds <= 0) return
+
+        timerSeconds--
+
+        if (timerSeconds <= 0) {
+            timerSeconds = 0
+            isTimerRunning = false
+            timerFinished = true
+            countdownJob = null
+        }
+    }
+}
