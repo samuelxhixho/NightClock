@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 
 val Context.settingsDataStore by preferencesDataStore(
     name = "night_clock_settings"
@@ -19,6 +20,10 @@ object SettingsKeys {
 
     val CLOCK_FONT = stringPreferencesKey("clock_font")
     val ACCENT_COLOR = intPreferencesKey("accent_color")
+
+    val CUSTOM_ACCENT_COLOR =
+        longPreferencesKey("custom_accent_color")
+
     val CUSTOM_TIMER_MINUTES = intPreferencesKey("custom_timer_minutes")
 
     val TIMER_PRESET_1 = intPreferencesKey("timer_preset_1")

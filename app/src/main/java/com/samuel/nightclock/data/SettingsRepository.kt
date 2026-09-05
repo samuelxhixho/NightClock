@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.edit
 import com.samuel.nightclock.model.AlarmSound
 import com.samuel.nightclock.model.ClockStyle
 import com.samuel.nightclock.model.ClockFont
+import com.samuel.nightclock.model.AccentColorPreset
 import kotlinx.coroutines.flow.map
 
 class SettingsRepository(
@@ -39,8 +40,15 @@ class SettingsRepository(
         )
     }
 
-    val accentColorIndex = context.settingsDataStore.data.map { preferences ->
-        preferences[SettingsKeys.ACCENT_COLOR] ?: 0
+    val accentColorPreset = context.settingsDataStore.data.map { preferences ->
+        AccentColorPreset.fromStorageValue(
+            preferences[SettingsKeys.ACCENT_COLOR] ?: 0
+        )
+    }
+
+    val customAccentColor = context.settingsDataStore.data.map { preferences ->
+        preferences[SettingsKeys.CUSTOM_ACCENT_COLOR]
+            ?: 0xFFFFFFFFL
     }
 
     val customTimerMinutes = context.settingsDataStore.data.map { preferences ->
@@ -123,9 +131,31 @@ class SettingsRepository(
         }
     }
 
-    suspend fun setAccentColorIndex(index: Int) {
+    suspend fun setAccentColorPreset(
+        preset: AccentColorPreset
+    ) {
         context.settingsDataStore.edit { preferences ->
-            preferences[SettingsKeys.ACCENT_COLOR] = index
+            preferences[SettingsKeys.ACCENT_COLOR] =
+                preset.storageValue
+        }
+    }
+
+    suspend fun setCustomAccentColor(colorArgb: Long) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[SettingsKeys.CUSTOM_ACCENT_COLOR] =
+                colorArgb
+        }
+    }
+
+    suspend fun setCustomAccentColorAndActivate(
+        colorArgb: Long
+    ) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[SettingsKeys.CUSTOM_ACCENT_COLOR] =
+                colorArgb
+
+            preferences[SettingsKeys.ACCENT_COLOR] =
+                AccentColorPreset.CUSTOM.storageValue
         }
     }
 

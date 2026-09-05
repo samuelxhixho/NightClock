@@ -35,6 +35,7 @@ import androidx.compose.material3.Slider
 import com.samuel.nightclock.model.AlarmSound
 import com.samuel.nightclock.model.ClockStyle
 import com.samuel.nightclock.model.ClockFont
+import com.samuel.nightclock.model.AccentColorPreset
 
 @Composable
 fun SettingsOverlay(
@@ -62,10 +63,12 @@ fun SettingsOverlay(
     onEditAutoDimEnd: () -> Unit,
     clockStyle: ClockStyle,
     onClockStyleChange: (ClockStyle) -> Unit,
-    accentColorIndex: Int,
+    accentColorPreset: AccentColorPreset,
+    customAccentColor: Long,
+    onAccentColorChange: (AccentColorPreset) -> Unit,
+    onEditCustomAccentColor: () -> Unit,
     clockFont: ClockFont,
     onClockFontChange: (ClockFont) -> Unit,
-    onAccentColorChange: (Int) -> Unit,
     timerPreset1: Int,
     timerPreset2: Int,
     timerPreset3: Int,
@@ -130,8 +133,10 @@ fun SettingsOverlay(
         Spacer(modifier = Modifier.height(12.dp))
 
         AccentColorPicker(
-            selectedAccentColor = accentColorIndex,
-            onAccentColorSelected = onAccentColorChange
+            selectedAccentColor = accentColorPreset,
+            customAccentColor = customAccentColor,
+            onAccentColorSelected = onAccentColorChange,
+            onEditCustomColor = onEditCustomAccentColor
         )
 
         Spacer(modifier = Modifier.height(14.dp))
@@ -333,16 +338,22 @@ private fun ClockStylePicker(
 
 @Composable
 private fun AccentColorPicker(
-    selectedAccentColor: Int,
-    onAccentColorSelected: (Int) -> Unit
+    selectedAccentColor: AccentColorPreset,
+    customAccentColor: Long,
+    onAccentColorSelected: (AccentColorPreset) -> Unit,
+    onEditCustomColor: () -> Unit
 ) {
     val colors = listOf(
-        "White" to Color.White,
-        "Red" to Color(0xFFFF5A5F),
-        "Blue" to Color(0xFF64B5F6),
-        "Green" to Color(0xFF66BB6A),
-        "Purple" to Color(0xFFB388FF),
-        "Amber" to Color(0xFFFFC857)
+        AccentColorPreset.WHITE to Color.White,
+        AccentColorPreset.RED to Color(0xFFFF5A5F),
+        AccentColorPreset.BLUE to Color(0xFF64B5F6),
+        AccentColorPreset.GREEN to Color(0xFF66BB6A),
+        AccentColorPreset.PURPLE to Color(0xFFB388FF),
+        AccentColorPreset.AMBER to Color(0xFFFFC857),
+        AccentColorPreset.CYAN to Color(0xFF4DD0E1),
+        AccentColorPreset.PINK to Color(0xFFFF80AB),
+        AccentColorPreset.ORANGE to Color(0xFFFF9F43),
+        AccentColorPreset.CUSTOM to Color(customAccentColor)
     )
 
     Column {
@@ -355,44 +366,110 @@ private fun AccentColorPicker(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            colors.forEachIndexed { index, colorOption ->
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .background(
-                            color = colorOption.second,
-                            shape = RoundedCornerShape(100.dp)
-                        )
-                        .border(
-                            width = if (selectedAccentColor == index) {
-                                2.dp
-                            } else {
-                                1.dp
-                            },
-                            color = if (selectedAccentColor == index) {
-                                Color.White
-                            } else {
-                                Color(0xFF333333)
-                            },
-                            shape = RoundedCornerShape(100.dp)
-                        )
-                        .clickable {
-                            onAccentColorSelected(index)
-                        }
-                )
+            colors.chunked(5).forEach { rowColors ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    rowColors.forEach { colorOption ->
+                        val preset = colorOption.first
+                        val color = colorOption.second
 
-                if (index != colors.lastIndex) {
-                    Spacer(modifier = Modifier.width(10.dp))
+                        if (preset == AccentColorPreset.CUSTOM) {
+                            Row(
+                                modifier = Modifier
+                                    .height(30.dp)
+                                    .background(
+                                        color = Color(0xFF101010),
+                                        shape = RoundedCornerShape(100.dp)
+                                    )
+                                    .border(
+                                        width = if (
+                                            selectedAccentColor == preset
+                                        ) {
+                                            2.dp
+                                        } else {
+                                            1.dp
+                                        },
+                                        color = if (
+                                            selectedAccentColor == preset
+                                        ) {
+                                            Color.White
+                                        } else {
+                                            Color(0xFF333333)
+                                        },
+                                        shape = RoundedCornerShape(100.dp)
+                                    )
+                                    .clickable {
+                                        onEditCustomColor()
+                                    }
+                                    .padding(horizontal = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(14.dp)
+                                        .background(
+                                            color = color,
+                                            shape = RoundedCornerShape(100.dp)
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = Color.White.copy(alpha = 0.35f),
+                                            shape = RoundedCornerShape(100.dp)
+                                        )
+                                )
+
+                                Spacer(
+                                    modifier = Modifier.width(6.dp)
+                                )
+
+                                Text(
+                                    text = preset.displayName,
+                                    color = Color(0xFFBDBDBD),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Light
+                                )
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .background(
+                                        color = color,
+                                        shape = RoundedCornerShape(100.dp)
+                                    )
+                                    .border(
+                                        width = if (
+                                            selectedAccentColor == preset
+                                        ) {
+                                            2.dp
+                                        } else {
+                                            1.dp
+                                        },
+                                        color = if (
+                                            selectedAccentColor == preset
+                                        ) {
+                                            Color.White
+                                        } else {
+                                            Color(0xFF333333)
+                                        },
+                                        shape = RoundedCornerShape(100.dp)
+                                    )
+                                    .clickable {
+                                        onAccentColorSelected(preset)
+                                    }
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
-
 @Composable
 private fun SettingsRow(
     title: String,

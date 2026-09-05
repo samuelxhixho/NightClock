@@ -8,9 +8,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.samuel.nightclock.data.SettingsRepository
+import com.samuel.nightclock.model.AccentColorPreset
 import com.samuel.nightclock.model.AlarmSound
-import com.samuel.nightclock.model.ClockStyle
 import com.samuel.nightclock.model.ClockFont
+import com.samuel.nightclock.model.ClockStyle
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
@@ -61,11 +62,19 @@ class NightClockViewModel(
         initialValue = ClockFont.SANS
     )
 
-    val accentColorIndex = settingsRepository.accentColorIndex.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = 0
-    )
+    val accentColorPreset =
+        settingsRepository.accentColorPreset.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = AccentColorPreset.WHITE
+        )
+
+    val customAccentColor =
+        settingsRepository.customAccentColor.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = 0xFFFFFFFFL
+        )
 
     val customTimerMinutes = settingsRepository.customTimerMinutes.stateIn(
         scope = viewModelScope,
@@ -211,9 +220,27 @@ class NightClockViewModel(
         }
     }
 
-    fun setAccentColorIndex(index: Int) {
+    fun setAccentColorPreset(
+        preset: AccentColorPreset
+    ) {
         viewModelScope.launch {
-            settingsRepository.setAccentColorIndex(index)
+            settingsRepository.setAccentColorPreset(preset)
+        }
+    }
+
+    fun setCustomAccentColor(colorArgb: Long) {
+        viewModelScope.launch {
+            settingsRepository.setCustomAccentColor(colorArgb)
+        }
+    }
+
+    fun setCustomAccentColorAndActivate(
+        colorArgb: Long
+    ) {
+        viewModelScope.launch {
+            settingsRepository.setCustomAccentColorAndActivate(
+                colorArgb
+            )
         }
     }
 

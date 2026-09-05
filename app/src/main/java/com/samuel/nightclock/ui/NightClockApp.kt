@@ -27,16 +27,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.samuel.nightclock.getNightClockUiColors
 import com.samuel.nightclock.ui.clock.ClockHomeScreen
-import com.samuel.nightclock.ui.settings.SettingsOverlay
 import com.samuel.nightclock.ui.components.DismissibleOverlay
+import com.samuel.nightclock.ui.settings.CustomAccentColorOverlay
+import com.samuel.nightclock.ui.settings.PresetEditorOverlay
+import com.samuel.nightclock.ui.settings.SettingsOverlay
+import com.samuel.nightclock.ui.settings.TimePickerOverlay
+import com.samuel.nightclock.ui.timer.CustomTimerOverlay
 import com.samuel.nightclock.ui.timer.QuickTimerControls
 import com.samuel.nightclock.ui.timer.TimerDoneScreen
-import com.samuel.nightclock.ui.timer.CustomTimerOverlay
 import com.samuel.nightclock.ui.timer.TimerRunningScreen
-import com.samuel.nightclock.viewmodel.NightClockViewModel
-import com.samuel.nightclock.ui.settings.PresetEditorOverlay
 import com.samuel.nightclock.util.playTimerFinishedSound
-import com.samuel.nightclock.ui.settings.TimePickerOverlay
+import com.samuel.nightclock.viewmodel.NightClockViewModel
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -71,8 +72,11 @@ fun NightClockApp(
     val clockFont by
     nightClockViewModel.clockFont.collectAsState()
 
-    val accentColorIndex by
-    nightClockViewModel.accentColorIndex.collectAsState()
+    val accentColorPreset by
+    nightClockViewModel.accentColorPreset.collectAsState()
+
+    val customAccentColor by
+    nightClockViewModel.customAccentColor.collectAsState()
 
     val alarmSound by
     nightClockViewModel.alarmSound.collectAsState()
@@ -120,6 +124,10 @@ fun NightClockApp(
     }
 
     var showCustomTimer by remember {
+        mutableStateOf(false)
+    }
+
+    var showCustomAccentEditor by remember {
         mutableStateOf(false)
     }
 
@@ -186,7 +194,8 @@ fun NightClockApp(
         dimModeEnabled || autoDimActive
 
     val appColors = getNightClockUiColors(
-        accentColorIndex = accentColorIndex,
+        accentColorPreset = accentColorPreset,
+        customAccentColor = customAccentColor,
         dimModeEnabled = effectiveDimMode
     )
 
@@ -198,6 +207,7 @@ fun NightClockApp(
                 enabled =
                     !showSettings &&
                             !showCustomTimer &&
+                            !showCustomAccentEditor &&
                             editingPresetIndex == null &&
                             editingAutoDimTime == null
             ) {
@@ -220,7 +230,8 @@ fun NightClockApp(
         if (
             nightClockViewModel.timerSeconds == 0 &&
             !nightClockViewModel.timerFinished &&
-            !showCustomTimer
+            !showCustomTimer &&
+            !showCustomAccentEditor
         ) {
             TextButton(
                 modifier = Modifier
@@ -352,9 +363,14 @@ fun NightClockApp(
                     },
                     clockStyle = clockStyle,
                     clockFont = clockFont,
-                    accentColorIndex = accentColorIndex,
-                    onAccentColorChange = { index ->
-                        nightClockViewModel.setAccentColorIndex(index)
+                    accentColorPreset = accentColorPreset,
+                    customAccentColor = customAccentColor,
+                    onAccentColorChange = { preset ->
+                        nightClockViewModel.setAccentColorPreset(preset)
+                    },
+                    onEditCustomAccentColor = {
+                        showSettings = false
+                        showCustomAccentEditor = true
                     },
                     onSoundChange = { enabled ->
                         nightClockViewModel.setSoundEnabled(enabled)
@@ -484,6 +500,28 @@ fun NightClockApp(
                         }
 
                         editingAutoDimTime = null
+                    }
+                )
+            }
+        }
+
+        if (showCustomAccentEditor) {
+            DismissibleOverlay(
+                onDismiss = {
+                    showCustomAccentEditor = false
+                }
+            ) {
+                CustomAccentColorOverlay(
+                    initialColor = customAccentColor,
+                    onSave = { colorArgb ->
+                        nightClockViewModel.setCustomAccentColorAndActivate(
+                            colorArgb
+                        )
+
+                        showCustomAccentEditor = false
+                    },
+                    onDismiss = {
+                        showCustomAccentEditor = false
                     }
                 )
             }
