@@ -19,6 +19,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.unit.IntOffset
 import com.samuel.nightclock.NightClockUiColors
 import com.samuel.nightclock.util.playTimerFinishedSound
 import com.samuel.nightclock.util.vibrateTimerFinished
@@ -31,6 +35,7 @@ import com.samuel.nightclock.ui.layout.NightClockScreenSize
 fun TimerDoneScreen(
     modifier: Modifier = Modifier,
     layoutInfo: NightClockLayoutInfo,
+    burnInOffset: IntOffset,
     currentTimeText: String,
     context: Context,
     soundEnabled: Boolean,
@@ -40,6 +45,7 @@ fun TimerDoneScreen(
     vibrationEnabled: Boolean,
     dimModeEnabled: Boolean,
     appColors: NightClockUiColors,
+    onAddFiveMinutes: () -> Unit,
     onDismiss: () -> Unit
 ) {
     LaunchedEffect(Unit) {
@@ -79,7 +85,9 @@ fun TimerDoneScreen(
         modifier = modifier
     ) {
         Column(
-            modifier = Modifier.align(Alignment.Center),
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset { burnInOffset },
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -102,18 +110,40 @@ fun TimerDoneScreen(
             )
         }
 
-        TextButton(
+        Row(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 34.dp, bottom = 24.dp),
-            onClick = onDismiss
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Dismiss",
-                color = appColors.secondary,
-                fontSize = (14f * doneScale).sp,
-                fontWeight = FontWeight.Light
+            TextButton(
+                onClick = onAddFiveMinutes
+            ) {
+                Text(
+                    text = "+5 min",
+                    color = appColors.main,
+                    fontSize = (14f * doneScale).sp,
+                    fontWeight = FontWeight.Light
+                )
+            }
+
+            Spacer(
+                modifier = Modifier.width(
+                    (12f * doneScale).dp
+                )
             )
+
+            TextButton(
+                onClick = onDismiss
+            ) {
+                Text(
+                    text = "Dismiss",
+                    color = appColors.secondary,
+                    fontSize = (14f * doneScale).sp,
+                    fontWeight = FontWeight.Light
+                )
+            }
         }
     }
 }

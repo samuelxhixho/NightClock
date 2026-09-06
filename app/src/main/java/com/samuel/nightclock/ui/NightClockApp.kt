@@ -27,6 +27,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import com.samuel.nightclock.getNightClockUiColors
 import com.samuel.nightclock.ui.clock.ClockHomeScreen
 import com.samuel.nightclock.ui.components.DismissibleOverlay
@@ -156,6 +161,13 @@ fun NightClockApp(
 
     var showTimerControls by remember {
         mutableStateOf(false)
+    }
+
+    LaunchedEffect(showTimerControls) {
+        if (showTimerControls) {
+            delay(6.seconds)
+            showTimerControls = false
+        }
     }
 
     var showSettings by remember {
@@ -294,6 +306,7 @@ fun NightClockApp(
             TimerDoneScreen(
                 modifier = Modifier.fillMaxSize(),
                 layoutInfo = layoutInfo,
+                burnInOffset = burnInOffset,
                 currentTimeText = timeText,
                 context = context,
                 soundEnabled = soundEnabled,
@@ -303,6 +316,10 @@ fun NightClockApp(
                 alarmSound = alarmSound,
                 alarmVolume = alarmVolume,
                 gradualAlarmEnabled = gradualAlarmEnabled,
+                onAddFiveMinutes = {
+                    nightClockViewModel.startTimer(5)
+                    showTimerControls = false
+                },
                 onDismiss = {
                     nightClockViewModel.dismissFinishedTimer()
                     showTimerControls = false
@@ -354,11 +371,24 @@ fun NightClockApp(
                 layoutInfo = layoutInfo
             )
 
-            if (showTimerControls) {
+            AnimatedVisibility(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                visible = showTimerControls,
+                enter = fadeIn() +
+                        slideInVertically(
+                            initialOffsetY = { height ->
+                                height / 2
+                            }
+                        ),
+                exit = fadeOut() +
+                        slideOutVertically(
+                            targetOffsetY = { height ->
+                                height / 2
+                            }
+                        )
+            ) {
                 QuickTimerControls(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 28.dp),
+                    modifier = Modifier.padding(bottom = 28.dp),
                     layoutInfo = layoutInfo,
                     preset1Minutes = timerPreset1,
                     preset2Minutes = timerPreset2,
