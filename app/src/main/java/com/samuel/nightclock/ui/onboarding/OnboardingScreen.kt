@@ -29,11 +29,55 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.samuel.nightclock.ui.layout.NightClockLayoutInfo
+import com.samuel.nightclock.ui.layout.NightClockScreenSize
 
 @Composable
 fun OnboardingScreen(
+    layoutInfo: NightClockLayoutInfo,
     onFinish: () -> Unit
-) {
+){
+    val cardWidth = when (layoutInfo.screenSize) {
+        NightClockScreenSize.COMPACT ->
+            (layoutInfo.width - 32.dp).coerceAtMost(430.dp)
+
+        NightClockScreenSize.MEDIUM ->
+            (layoutInfo.width - 64.dp).coerceAtMost(500.dp)
+
+        NightClockScreenSize.EXPANDED ->
+            (layoutInfo.width - 96.dp).coerceAtMost(560.dp)
+    }
+
+    val horizontalPadding = when (layoutInfo.screenSize) {
+        NightClockScreenSize.COMPACT -> 28.dp
+        NightClockScreenSize.MEDIUM -> 32.dp
+        NightClockScreenSize.EXPANDED -> 36.dp
+    }
+
+    val verticalPadding = when (layoutInfo.screenSize) {
+        NightClockScreenSize.COMPACT -> 24.dp
+        NightClockScreenSize.MEDIUM -> 28.dp
+        NightClockScreenSize.EXPANDED -> 32.dp
+    }
+
+    val titleSize = when (layoutInfo.screenSize) {
+        NightClockScreenSize.COMPACT -> 24.sp
+        NightClockScreenSize.MEDIUM -> 26.sp
+        NightClockScreenSize.EXPANDED -> 28.sp
+    }
+
+    val descriptionSize = when (layoutInfo.screenSize) {
+        NightClockScreenSize.COMPACT -> 14.sp
+        NightClockScreenSize.MEDIUM -> 15.sp
+        NightClockScreenSize.EXPANDED -> 16.sp
+    }
+
+    val buttonWidth = when (layoutInfo.screenSize) {
+        NightClockScreenSize.COMPACT -> 180.dp
+        NightClockScreenSize.MEDIUM -> 200.dp
+        NightClockScreenSize.EXPANDED -> 220.dp
+    }
+
     var page by remember {
         mutableIntStateOf(0)
     }
@@ -67,7 +111,7 @@ fun OnboardingScreen(
     ) {
         Column(
             modifier = Modifier
-                .width(430.dp)
+                .width(cardWidth)
                 .background(
                     color = Color(0xFF080808),
                     shape = RoundedCornerShape(28.dp)
@@ -78,8 +122,8 @@ fun OnboardingScreen(
                     shape = RoundedCornerShape(28.dp)
                 )
                 .padding(
-                    horizontal = 28.dp,
-                    vertical = 24.dp
+                    horizontal = horizontalPadding,
+                    vertical = verticalPadding
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -95,7 +139,7 @@ fun OnboardingScreen(
             Text(
                 text = currentPage.title,
                 color = Color.White,
-                fontSize = 24.sp,
+                fontSize = titleSize,
                 fontWeight = FontWeight.ExtraLight
             )
 
@@ -104,7 +148,7 @@ fun OnboardingScreen(
             Text(
                 text = currentPage.description,
                 color = Color(0xFF8A8A8A),
-                fontSize = 14.sp,
+                fontSize = descriptionSize,
                 fontWeight = FontWeight.Light,
                 lineHeight = 20.sp
             )
@@ -161,7 +205,7 @@ fun OnboardingScreen(
                 }
 
                 Button(
-                    modifier = Modifier.width(180.dp),
+                    modifier = Modifier.width(buttonWidth),
                     onClick = {
                         if (isLastPage) {
                             onFinish()

@@ -36,10 +36,13 @@ import com.samuel.nightclock.model.AlarmSound
 import com.samuel.nightclock.model.ClockStyle
 import com.samuel.nightclock.model.ClockFont
 import com.samuel.nightclock.model.AccentColorPreset
+import com.samuel.nightclock.ui.layout.NightClockLayoutInfo
+import com.samuel.nightclock.ui.layout.NightClockScreenSize
 
 @Composable
 fun SettingsOverlay(
     modifier: Modifier = Modifier,
+    layoutInfo: NightClockLayoutInfo,
     soundEnabled: Boolean,
     alarmSound: AlarmSound,
     alarmVolume: Int,
@@ -77,57 +80,50 @@ fun SettingsOverlay(
     onEditPreset3: () -> Unit,
     onClose: () -> Unit
 ) {
-    Column(
-        modifier = modifier
-            .width(430.dp)
-            .heightIn(max = 330.dp)
-            .background(
-                color = Color(0xFF080808),
-                shape = RoundedCornerShape(26.dp)
-            )
-            .verticalScroll(rememberScrollState())
-            .padding(18.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Settings",
-                color = Color.White,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.ExtraLight
-            )
+    val settingsWidth = when (layoutInfo.screenSize) {
+        NightClockScreenSize.COMPACT ->
+            (layoutInfo.width - 32.dp).coerceAtMost(430.dp)
 
-            TextButton(
-                onClick = onClose,
-                contentPadding = PaddingValues(
-                    horizontal = 8.dp,
-                    vertical = 0.dp
-                )
-            ) {
-                Text(
-                    text = "✕",
-                    color = Color(0xFFBDBDBD),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Light
-                )
-            }
-        }
+        NightClockScreenSize.MEDIUM ->
+            (layoutInfo.width - 64.dp).coerceAtMost(560.dp)
 
-        Spacer(modifier = Modifier.height(14.dp))
+        NightClockScreenSize.EXPANDED ->
+            (layoutInfo.width - 96.dp).coerceAtMost(760.dp)
+    }
 
+    val settingsMaxHeight = when (layoutInfo.screenSize) {
+        NightClockScreenSize.COMPACT ->
+            (layoutInfo.height - 32.dp).coerceAtMost(330.dp)
+
+        NightClockScreenSize.MEDIUM ->
+            (layoutInfo.height - 64.dp).coerceAtMost(460.dp)
+
+        NightClockScreenSize.EXPANDED ->
+            (layoutInfo.height - 96.dp).coerceAtMost(620.dp)
+    }
+
+    val settingsPadding = when (layoutInfo.screenSize) {
+        NightClockScreenSize.COMPACT -> 18.dp
+        NightClockScreenSize.MEDIUM -> 22.dp
+        NightClockScreenSize.EXPANDED -> 26.dp
+    }
+
+    val isExpanded =
+        layoutInfo.screenSize == NightClockScreenSize.EXPANDED
+
+    val appearanceContent: @Composable () -> Unit = {
         ClockStylePicker(
             selectedStyle = clockStyle,
-            onStyleSelected = onClockStyleChange
+            onStyleSelected = onClockStyleChange,
+            itemsPerRow = if (isExpanded) 3 else 4
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         ClockFontPicker(
             selectedFont = clockFont,
-            onFontSelected = onClockFontChange
+            onFontSelected = onClockFontChange,
+            itemsPerRow = if (isExpanded) 2 else 4
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -202,9 +198,9 @@ fun SettingsOverlay(
                 onEditEnd = onEditAutoDimEnd
             )
         }
+    }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
+    val alarmContent: @Composable () -> Unit = {
         SettingsRow(
             title = "Sound",
             subtitle = "Play alarm when timer ends",
@@ -254,12 +250,81 @@ fun SettingsOverlay(
             onCheckedChange = onBatteryWarningChange
         )
     }
+
+    Column(
+        modifier = modifier
+            .width(settingsWidth)
+            .heightIn(max = settingsMaxHeight)
+            .background(
+                color = Color(0xFF080808),
+                shape = RoundedCornerShape(26.dp)
+            )
+            .verticalScroll(rememberScrollState())
+            .padding(settingsPadding)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Settings",
+                color = Color.White,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.ExtraLight
+            )
+
+            TextButton(
+                onClick = onClose,
+                contentPadding = PaddingValues(
+                    horizontal = 8.dp,
+                    vertical = 0.dp
+                )
+            ) {
+                Text(
+                    text = "✕",
+                    color = Color(0xFFBDBDBD),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Light
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        if (isExpanded) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(28.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    appearanceContent()
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    alarmContent()
+                }
+            }
+        } else {
+            appearanceContent()
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            alarmContent()
+        }
+    }
 }
 
 @Composable
 private fun ClockStylePicker(
     selectedStyle: ClockStyle,
-    onStyleSelected: (ClockStyle) -> Unit
+    onStyleSelected: (ClockStyle) -> Unit,
+    itemsPerRow: Int = 4
 ) {
     val styles = listOf(
         ClockStyle.CLASSIC,
@@ -285,7 +350,7 @@ private fun ClockStylePicker(
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            styles.chunked(4).forEach { rowStyles ->
+            styles.chunked(itemsPerRow).forEach { rowStyles ->
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -470,6 +535,7 @@ private fun AccentColorPicker(
         }
     }
 }
+
 @Composable
 private fun SettingsRow(
     title: String,
@@ -735,7 +801,8 @@ private fun formatTime(totalMinutes: Int): String {
 @Composable
 private fun ClockFontPicker(
     selectedFont: ClockFont,
-    onFontSelected: (ClockFont) -> Unit
+    onFontSelected: (ClockFont) -> Unit,
+    itemsPerRow: Int = 4
 ) {
     Column {
         Text(
@@ -747,50 +814,64 @@ private fun ClockFontPicker(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            ClockFont.entries.forEach { font ->
-                Button(
-                    modifier = Modifier.width(90.dp),
-                    onClick = {
-                        onFontSelected(font)
-                    },
-                    shape = RoundedCornerShape(100.dp),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = if (selectedFont == font) {
-                            Color(0xFFBDBDBD)
-                        } else {
-                            Color(0xFF242424)
+            ClockFont.entries
+                .toList()
+                .chunked(itemsPerRow)
+                .forEach { rowFonts ->
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        rowFonts.forEach { font ->
+                            Button(
+                                modifier = Modifier.width(90.dp),
+                                onClick = {
+                                    onFontSelected(font)
+                                },
+                                shape = RoundedCornerShape(100.dp),
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = if (selectedFont == font) {
+                                        Color(0xFFBDBDBD)
+                                    } else {
+                                        Color(0xFF242424)
+                                    }
+                                ),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (
+                                        selectedFont == font
+                                    ) {
+                                        Color(0xFF1A1A1A)
+                                    } else {
+                                        Color(0xFF090909)
+                                    },
+                                    contentColor = if (
+                                        selectedFont == font
+                                    ) {
+                                        Color.White
+                                    } else {
+                                        Color(0xFF8A8A8A)
+                                    }
+                                ),
+                                contentPadding = PaddingValues(
+                                    horizontal = 6.dp,
+                                    vertical = 6.dp
+                                )
+                            ) {
+                                Text(
+                                    text = font.displayName,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Light,
+                                    maxLines = 1
+                                )
+                            }
                         }
-                    ),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedFont == font) {
-                            Color(0xFF1A1A1A)
-                        } else {
-                            Color(0xFF090909)
-                        },
-                        contentColor = if (selectedFont == font) {
-                            Color.White
-                        } else {
-                            Color(0xFF8A8A8A)
-                        }
-                    ),
-                    contentPadding = PaddingValues(
-                        horizontal = 6.dp,
-                        vertical = 6.dp
-                    )
-                ) {
-                    Text(
-                        text = font.displayName,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Light,
-                        maxLines = 1
-                    )
+                    }
                 }
-            }
         }
     }
 }

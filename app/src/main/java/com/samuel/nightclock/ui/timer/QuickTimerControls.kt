@@ -17,10 +17,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.samuel.nightclock.NightClockUiColors
+import com.samuel.nightclock.ui.layout.NightClockLayoutInfo
+import com.samuel.nightclock.ui.layout.NightClockScreenSize
 
 @Composable
 fun QuickTimerControls(
     modifier: Modifier = Modifier,
+    layoutInfo: NightClockLayoutInfo,
     preset1Minutes: Int,
     preset2Minutes: Int,
     preset3Minutes: Int,
@@ -28,6 +31,13 @@ fun QuickTimerControls(
     onStartTimer: (Int) -> Unit,
     onCustomTimer: () -> Unit
 ){
+
+    val controlScale = when (layoutInfo.screenSize) {
+        NightClockScreenSize.COMPACT -> 1f
+        NightClockScreenSize.MEDIUM -> 1.15f
+        NightClockScreenSize.EXPANDED -> 1.3f
+    }
+
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.Center,
@@ -36,36 +46,52 @@ fun QuickTimerControls(
         TimerButton(
             text = formatPresetLabel(preset1Minutes),
             appColors = appColors,
+            contentScale = controlScale,
             onClick = {
                 onStartTimer(preset1Minutes)
             }
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(
+            modifier = Modifier.width(
+                (12f * controlScale).dp
+            )
+        )
 
         TimerButton(
             text = formatPresetLabel(preset2Minutes),
             appColors = appColors,
+            contentScale = controlScale,
             onClick = {
                 onStartTimer(preset2Minutes)
             }
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(
+            modifier = Modifier.width(
+                (12f * controlScale).dp
+            )
+        )
 
         TimerButton(
             text = formatPresetLabel(preset3Minutes),
             appColors = appColors,
+            contentScale = controlScale,
             onClick = {
                 onStartTimer(preset3Minutes)
             }
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(
+            modifier = Modifier.width(
+                (12f * controlScale).dp
+            )
+        )
 
         TimerButton(
             text = "Custom",
             appColors = appColors,
+            contentScale = controlScale,
             onClick = onCustomTimer
         )
     }
@@ -75,6 +101,7 @@ fun QuickTimerControls(
 private fun TimerButton(
     text: String,
     appColors: NightClockUiColors,
+    contentScale: Float,
     onClick: () -> Unit
 ) {
     Button(
@@ -89,13 +116,13 @@ private fun TimerButton(
             contentColor = appColors.main
         ),
         contentPadding = PaddingValues(
-            horizontal = 18.dp,
-            vertical = 7.dp
+            horizontal = (18f * contentScale).dp,
+            vertical = (7f * contentScale).dp
         )
     ) {
         Text(
             text = text,
-            fontSize = 13.sp,
+            fontSize = (13f * contentScale).sp,
             fontWeight = FontWeight.Light
         )
     }

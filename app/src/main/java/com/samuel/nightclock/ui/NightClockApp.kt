@@ -25,9 +25,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import com.samuel.nightclock.getNightClockUiColors
 import com.samuel.nightclock.ui.clock.ClockHomeScreen
 import com.samuel.nightclock.ui.components.DismissibleOverlay
+import com.samuel.nightclock.ui.layout.createNightClockLayoutInfo
 import com.samuel.nightclock.ui.onboarding.OnboardingScreen
 import com.samuel.nightclock.ui.settings.CustomAccentColorOverlay
 import com.samuel.nightclock.ui.settings.PresetEditorOverlay
@@ -51,6 +54,17 @@ fun NightClockApp(
 ) {
     val context = LocalContext.current
 
+    val windowInfo = LocalWindowInfo.current
+    val density = LocalDensity.current
+
+    val layoutInfo = createNightClockLayoutInfo(
+        width = with(density) {
+            windowInfo.containerSize.width.toDp()
+        },
+        height = with(density) {
+            windowInfo.containerSize.height.toDp()
+        }
+    )
     val soundEnabled by nightClockViewModel.soundEnabled.collectAsState()
     val vibrationEnabled by nightClockViewModel.vibrationEnabled.collectAsState()
     val dimModeEnabled by nightClockViewModel.dimModeEnabled.collectAsState()
@@ -115,6 +129,7 @@ fun NightClockApp(
 
     if (onboardingCompleted == false) {
         OnboardingScreen(
+            layoutInfo = layoutInfo,
             onFinish = {
                 nightClockViewModel.setOnboardingCompleted(true)
             }
@@ -278,6 +293,7 @@ fun NightClockApp(
         if (nightClockViewModel.timerFinished) {
             TimerDoneScreen(
                 modifier = Modifier.fillMaxSize(),
+                layoutInfo = layoutInfo,
                 currentTimeText = timeText,
                 context = context,
                 soundEnabled = soundEnabled,
@@ -295,6 +311,7 @@ fun NightClockApp(
         } else if (nightClockViewModel.timerSeconds > 0) {
             TimerRunningScreen(
                 modifier = Modifier.fillMaxSize(),
+                layoutInfo = layoutInfo,
                 timerSeconds = nightClockViewModel.timerSeconds,
                 totalTimerSeconds = nightClockViewModel.totalTimerSeconds,
                 currentTimeText = timeText,
@@ -333,7 +350,8 @@ fun NightClockApp(
                 dateText = dateText,
                 clockStyle = clockStyle,
                 clockFont = clockFont,
-                appColors = appColors
+                appColors = appColors,
+                layoutInfo = layoutInfo
             )
 
             if (showTimerControls) {
@@ -341,6 +359,7 @@ fun NightClockApp(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 28.dp),
+                    layoutInfo = layoutInfo,
                     preset1Minutes = timerPreset1,
                     preset2Minutes = timerPreset2,
                     preset3Minutes = timerPreset3,
@@ -364,6 +383,7 @@ fun NightClockApp(
                 }
             ) {
                 SettingsOverlay(
+                    layoutInfo = layoutInfo,
                     soundEnabled = soundEnabled,
                     alarmSound = alarmSound,
                     alarmVolume = alarmVolume,

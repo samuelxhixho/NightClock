@@ -28,10 +28,13 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.samuel.nightclock.NightClockUiColors
+import com.samuel.nightclock.ui.layout.NightClockLayoutInfo
+import com.samuel.nightclock.ui.layout.NightClockScreenSize
 
 @Composable
 fun TimerRunningScreen(
     modifier: Modifier = Modifier,
+    layoutInfo: NightClockLayoutInfo,
     timerSeconds: Int,
     totalTimerSeconds: Int,
     currentTimeText: String,
@@ -44,7 +47,22 @@ fun TimerRunningScreen(
     BoxWithConstraints(
         modifier = modifier
     ) {
-        val ringSize = minOf(maxHeight * 0.58f, 270.dp)
+        val timerScale = when (layoutInfo.screenSize) {
+            NightClockScreenSize.COMPACT -> 1f
+            NightClockScreenSize.MEDIUM -> 1.15f
+            NightClockScreenSize.EXPANDED -> 1.35f
+        }
+
+        val ringLimit = when (layoutInfo.screenSize) {
+            NightClockScreenSize.COMPACT -> 270.dp
+            NightClockScreenSize.MEDIUM -> 340.dp
+            NightClockScreenSize.EXPANDED -> 430.dp
+        }
+
+        val ringSize = minOf(
+            maxHeight * 0.58f,
+            ringLimit
+        )
 
         LargeRadialTimer(
             appColors = appColors,
@@ -53,7 +71,8 @@ fun TimerRunningScreen(
                 .offset { burnInOffset },
             timerSeconds = timerSeconds,
             totalTimerSeconds = totalTimerSeconds,
-            ringSize = ringSize
+            ringSize = ringSize,
+            contentScale = timerScale
         )
 
         Text(
@@ -62,7 +81,7 @@ fun TimerRunningScreen(
                 .padding(top = 28.dp, end = 36.dp),
             text = currentTimeText,
             color = appColors.secondary,
-            fontSize = 18.sp,
+            fontSize = (18f * timerScale).sp,
             fontWeight = FontWeight.Light
         )
 
@@ -79,7 +98,7 @@ fun TimerRunningScreen(
                 Text(
                     text = if (isTimerRunning) "Pause" else "Resume",
                     color = appColors.main,
-                    fontSize = 14.sp,
+                    fontSize = (14f * timerScale).sp,
                     fontWeight = FontWeight.Light
                 )
             }
@@ -92,7 +111,7 @@ fun TimerRunningScreen(
                 Text(
                     text = "Reset",
                     color = appColors.secondary,
-                    fontSize = 14.sp,
+                    fontSize = (14f * timerScale).sp,
                     fontWeight = FontWeight.Light
                 )
             }
@@ -106,6 +125,7 @@ private fun LargeRadialTimer(
     timerSeconds: Int,
     totalTimerSeconds: Int,
     ringSize: Dp,
+    contentScale: Float,
     appColors: NightClockUiColors
 ) {
     val progress = if (totalTimerSeconds > 0) {
@@ -126,7 +146,8 @@ private fun LargeRadialTimer(
         Canvas(
             modifier = Modifier.fillMaxSize()
         ) {
-            val strokeWidth = 6.dp.toPx()
+            val strokeWidth =
+                (6f * contentScale).dp.toPx()
             val inset = strokeWidth / 2f
 
             drawArc(
@@ -168,7 +189,7 @@ private fun LargeRadialTimer(
             Text(
                 text = formatTimer(timerSeconds),
                 color = mainTextColor,
-                fontSize = 48.sp,
+                fontSize = (48f * contentScale).sp,
                 fontWeight = FontWeight.ExtraLight,
                 fontFamily = FontFamily.SansSerif,
                 letterSpacing = 1.sp
@@ -178,7 +199,7 @@ private fun LargeRadialTimer(
                 modifier = Modifier.padding(top = 4.dp),
                 text = "remaining",
                 color = labelColor,
-                fontSize = 13.sp,
+                fontSize = (13f * contentScale).sp,
                 fontWeight = FontWeight.Light
             )
         }

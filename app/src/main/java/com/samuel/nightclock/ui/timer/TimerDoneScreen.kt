@@ -24,10 +24,13 @@ import com.samuel.nightclock.util.playTimerFinishedSound
 import com.samuel.nightclock.util.vibrateTimerFinished
 import com.samuel.nightclock.model.AlarmSound
 import com.samuel.nightclock.util.stopTimerFinishedSound
+import com.samuel.nightclock.ui.layout.NightClockLayoutInfo
+import com.samuel.nightclock.ui.layout.NightClockScreenSize
 
 @Composable
 fun TimerDoneScreen(
     modifier: Modifier = Modifier,
+    layoutInfo: NightClockLayoutInfo,
     currentTimeText: String,
     context: Context,
     soundEnabled: Boolean,
@@ -66,6 +69,12 @@ fun TimerDoneScreen(
     val timeColor =
         if (dimModeEnabled) Color(0xFF4A4A4A) else Color(0xFF666666)
 
+    val doneScale = when (layoutInfo.screenSize) {
+        NightClockScreenSize.COMPACT -> 1f
+        NightClockScreenSize.MEDIUM -> 1.15f
+        NightClockScreenSize.EXPANDED -> 1.35f
+    }
+
     Box(
         modifier = modifier
     ) {
@@ -77,7 +86,7 @@ fun TimerDoneScreen(
             Text(
                 text = "Done",
                 color = doneTextColor,
-                fontSize = 72.sp,
+                fontSize = (72f * doneScale).sp,
                 fontWeight = FontWeight.ExtraLight,
                 fontFamily = FontFamily.SansSerif,
                 letterSpacing = 1.sp
@@ -88,7 +97,7 @@ fun TimerDoneScreen(
             Text(
                 text = currentTimeText,
                 color = timeColor,
-                fontSize = 22.sp,
+                fontSize = (22f * doneScale).sp,
                 fontWeight = FontWeight.Light
             )
         }
@@ -102,7 +111,7 @@ fun TimerDoneScreen(
             Text(
                 text = "Dismiss",
                 color = appColors.secondary,
-                fontSize = 14.sp,
+                fontSize = (14f * doneScale).sp,
                 fontWeight = FontWeight.Light
             )
         }

@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.samuel.nightclock.NightClockUiColors
 import kotlin.math.cos
@@ -19,10 +20,11 @@ fun AnalogClock(
     minute: Int,
     second: Int,
     appColors: NightClockUiColors,
-    modifier: Modifier = Modifier
-) {
+    modifier: Modifier = Modifier,
+    clockSize: Dp = 220.dp
+){
     Canvas(
-        modifier = modifier.size(220.dp)
+        modifier = modifier.size(clockSize)
     ) {
         val center = Offset(
             x = size.width / 2f,

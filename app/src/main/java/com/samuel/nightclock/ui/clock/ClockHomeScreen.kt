@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.width
 import com.samuel.nightclock.NightClockUiColors
 import com.samuel.nightclock.model.ClockStyle
 import com.samuel.nightclock.model.ClockFont
+import com.samuel.nightclock.ui.layout.NightClockLayoutInfo
+import com.samuel.nightclock.ui.layout.NightClockScreenSize
 
 @Composable
 fun ClockHomeScreen(
@@ -32,10 +34,29 @@ fun ClockHomeScreen(
     dateText: String,
     clockStyle: ClockStyle,
     clockFont: ClockFont,
-    appColors: NightClockUiColors
+    appColors: NightClockUiColors,
+    layoutInfo: NightClockLayoutInfo
 ) {
     val mainTextColor = appColors.main
     val secondaryTextColor = appColors.secondary
+
+    val clockScale = when (layoutInfo.screenSize) {
+        NightClockScreenSize.COMPACT -> 1f
+        NightClockScreenSize.MEDIUM -> 1.15f
+        NightClockScreenSize.EXPANDED -> 1.35f
+    }
+
+    val dateFontSize = when (layoutInfo.screenSize) {
+        NightClockScreenSize.COMPACT -> 20.sp
+        NightClockScreenSize.MEDIUM -> 22.sp
+        NightClockScreenSize.EXPANDED -> 26.sp
+    }
+
+    val analogClockSize = when (layoutInfo.screenSize) {
+        NightClockScreenSize.COMPACT -> 220.dp
+        NightClockScreenSize.MEDIUM -> 280.dp
+        NightClockScreenSize.EXPANDED -> 360.dp
+    }
 
     val selectedFontFamily = when (clockFont) {
         ClockFont.SANS -> FontFamily.SansSerif
@@ -54,7 +75,7 @@ fun ClockHomeScreen(
                 Text(
                     text = timeText,
                     color = mainTextColor,
-                    fontSize = 104.sp,
+                    fontSize = (104f * clockScale).sp,
                     fontWeight = FontWeight.ExtraLight,
                     fontFamily = selectedFontFamily,
                     letterSpacing = 2.sp
@@ -68,7 +89,7 @@ fun ClockHomeScreen(
                     Text(
                         text = hourText,
                         color = mainTextColor,
-                        fontSize = 82.sp,
+                        fontSize = (82f * clockScale).sp,
                         fontWeight = FontWeight.ExtraLight,
                         fontFamily = selectedFontFamily,
                         letterSpacing = 2.sp
@@ -77,7 +98,7 @@ fun ClockHomeScreen(
                     Text(
                         text = minuteText,
                         color = mainTextColor,
-                        fontSize = 82.sp,
+                        fontSize = (82f * clockScale).sp,
                         fontWeight = FontWeight.ExtraLight,
                         fontFamily = selectedFontFamily,
                         letterSpacing = 2.sp
@@ -89,7 +110,7 @@ fun ClockHomeScreen(
                 Text(
                     text = "$hourText · $minuteText",
                     color = mainTextColor,
-                    fontSize = 96.sp,
+                    fontSize = (96f * clockScale).sp,
                     fontWeight = FontWeight.ExtraLight,
                     fontFamily = selectedFontFamily,
                     letterSpacing = 4.sp
@@ -104,7 +125,7 @@ fun ClockHomeScreen(
                     Text(
                         text = hourText,
                         color = mainTextColor,
-                        fontSize = 96.sp,
+                        fontSize = (96f * clockScale).sp,
                         fontWeight = FontWeight.ExtraLight,
                         fontFamily = selectedFontFamily
                     )
@@ -113,14 +134,14 @@ fun ClockHomeScreen(
                         modifier = Modifier.padding(horizontal = 20.dp),
                         text = "|",
                         color = secondaryTextColor,
-                        fontSize = 64.sp,
+                        fontSize = (64f * clockScale).sp,
                         fontWeight = FontWeight.ExtraLight
                     )
 
                     Text(
                         text = minuteText,
                         color = mainTextColor,
-                        fontSize = 96.sp,
+                        fontSize = (96f * clockScale).sp,
                         fontWeight = FontWeight.ExtraLight,
                         fontFamily = selectedFontFamily
                     )
@@ -135,7 +156,7 @@ fun ClockHomeScreen(
                     Text(
                         text = timeText,
                         color = mainTextColor,
-                        fontSize = 96.sp,
+                        fontSize = (96f * clockScale).sp,
                         fontWeight = FontWeight.ExtraLight,
                         fontFamily = selectedFontFamily,
                         letterSpacing = 2.sp
@@ -148,7 +169,7 @@ fun ClockHomeScreen(
                         ),
                         text = secondText,
                         color = secondaryTextColor,
-                        fontSize = 34.sp,
+                        fontSize = (34f * clockScale).sp,
                         fontWeight = FontWeight.Light,
                         fontFamily = selectedFontFamily
                     )
@@ -160,7 +181,8 @@ fun ClockHomeScreen(
                     hour = hourValue,
                     minute = minuteValue,
                     second = secondValue,
-                    appColors = appColors
+                    appColors = appColors,
+                    clockSize = analogClockSize
                 )
             }
 
@@ -172,7 +194,7 @@ fun ClockHomeScreen(
                     Text(
                         text = hourText,
                         color = mainTextColor,
-                        fontSize = 116.sp,
+                        fontSize = (116f * clockScale).sp,
                         fontWeight = FontWeight.ExtraLight,
                         fontFamily = selectedFontFamily
                     )
@@ -184,7 +206,7 @@ fun ClockHomeScreen(
                         ),
                         text = minuteText,
                         color = secondaryTextColor,
-                        fontSize = 48.sp,
+                        fontSize = (48f * clockScale).sp,
                         fontWeight = FontWeight.Light,
                         fontFamily = selectedFontFamily
                     )
@@ -193,7 +215,9 @@ fun ClockHomeScreen(
 
             ClockStyle.WIDE -> {
                 Row(
-                    modifier = Modifier.width(430.dp),
+                    modifier = Modifier.width(
+                        (430f * clockScale).dp
+                    ),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -203,7 +227,7 @@ fun ClockHomeScreen(
                         Text(
                             text = hourText,
                             color = mainTextColor,
-                            fontSize = 104.sp,
+                            fontSize = (104f * clockScale).sp,
                             fontWeight = FontWeight.ExtraLight,
                             fontFamily = selectedFontFamily,
                             letterSpacing = 3.sp
@@ -212,7 +236,7 @@ fun ClockHomeScreen(
                         Text(
                             text = "HOUR",
                             color = secondaryTextColor,
-                            fontSize = 11.sp,
+                            fontSize = (11f * clockScale).sp,
                             fontWeight = FontWeight.Light,
                             letterSpacing = 3.sp
                         )
@@ -224,7 +248,7 @@ fun ClockHomeScreen(
                         Text(
                             text = minuteText,
                             color = mainTextColor,
-                            fontSize = 104.sp,
+                            fontSize = (104f * clockScale).sp,
                             fontWeight = FontWeight.ExtraLight,
                             fontFamily = selectedFontFamily,
                             letterSpacing = 3.sp
@@ -233,7 +257,7 @@ fun ClockHomeScreen(
                         Text(
                             text = "MINUTE",
                             color = secondaryTextColor,
-                            fontSize = 11.sp,
+                            fontSize = (11f * clockScale).sp,
                             fontWeight = FontWeight.Light,
                             letterSpacing = 3.sp
                         )
@@ -247,7 +271,7 @@ fun ClockHomeScreen(
         Text(
             text = dateText,
             color = secondaryTextColor,
-            fontSize = 20.sp,
+            fontSize = dateFontSize,
             fontWeight = FontWeight.Light
         )
 
